@@ -1,11 +1,24 @@
 var gl;
 var canvas;
-var camera_rotation = new vec3(0,0,0);
+var camera_rotation = new vec3(45,45,0);
 var camera_distance = 5;
+var test_box;
 
 function ProjectionMatrix()
 {
-
+	var r = canvas.width / canvas.height;
+	var n = (camera_distance - 1.74);
+	const min_n = 0.001;
+	if ( n < min_n ) n = min_n;
+	var f = (camera_distance + 1.74);;
+	var fov = 3.145 * 60 / 180;
+	var s = 1 / Math.tan( fov/2 );
+	perspectiveMatrix = [
+		s/r, 0, 0, 0,
+		0, s, 0, 0,
+		0, 0, (n+f)/(f-n), 1,
+		0, 0, -2*n*f/(f-n), 0
+	];
 }
 
 function UpdateCanvasSize()
@@ -33,7 +46,11 @@ function InitWebGL()
 		alert('Your browser does not support WebGL');
 	}
 
-    
+    test_box = new bow_drawer();
+
+	console.log("fatt");
 	UpdateCanvasSize();
+
+
     return;
 }
