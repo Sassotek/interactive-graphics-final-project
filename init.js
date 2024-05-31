@@ -1,8 +1,8 @@
 var gl;
 var canvas;
-var camera_rotation = new vec3(45,45,0);
-var camera_distance = 5;
-var test_box;
+var camera_rotation = new vec3(0,0,0);
+var camera_distance = 5.0;
+var test_cube;
 
 function ProjectionMatrix()
 {
@@ -19,16 +19,33 @@ function ProjectionMatrix()
 		0, 0, (n+f)/(f-n), 1,
 		0, 0, -2*n*f/(f-n), 0
 	];
+	
+	return perspectiveMatrix;
 }
 
 function UpdateCanvasSize()
 {
-    canvas.width = window.innerWidth;
-    canvas.heighh = window.innerHeight;
+	const pixel_ratio = window.devicePixelRatio || 1;
+    canvas.width = pixel_ratio*canvas.clientWidth;
+    canvas.height = pixel_ratio*canvas.clientHeight;
     gl.viewport(0,0,window.innerWidth,window.innerHeight);
 
-    gl.clearColor(0.75, 0.85, 0.8, 1.0);
+    gl.clearColor(0.7, 0.2, 0.8, 1.0);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	gl.enable(gl.DEPTH_TEST);
+}
+
+function draw()
+{
+	gl.clearColor(0.7, 0.2, 0.8, 1.0);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	
+	const proj_mat = ProjectionMatrix();
+	const camera_matrix = trans(1,camera_rotation, new vec3(0,0,camera_distance));
+
+	const v_w =  m_mult(camera_matrix, proj_mat);
+	test_cube.draw(v_w);
+
 }
 
 function InitWebGL()
@@ -46,10 +63,11 @@ function InitWebGL()
 		alert('Your browser does not support WebGL');
 	}
 
-    test_box = new bow_drawer();
+    test_cube = new cube_drawer();
 
 	console.log("fatt");
 	UpdateCanvasSize();
+	draw();
 
 
     return;
