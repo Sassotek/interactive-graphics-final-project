@@ -43,7 +43,7 @@ class bow_drawer
     constructor()
     {   
         //box shape
-        var pos = [
+        this.vertex = [
 			-1, -1, -1,
 			-1, -1,  1,
 			-1,  1, -1,
@@ -53,7 +53,7 @@ class bow_drawer
 			 1,  1, -1,
 			 1,  1,  1 ];
         
-         var clr = [
+        this.colors = [
 			0.5, 0.5, 0.5, 1,
 			0.5, 0.5, 0.5, 1, 
 			0.5, 0.5, 0.5, 1,
@@ -64,7 +64,7 @@ class bow_drawer
 			0.45, 0.45, 0.45, 1];     
         
         //world-model matrix, specifies world position
-        var w_m = [
+        this.w_m = [
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
@@ -97,15 +97,28 @@ class bow_drawer
                     gl_FragColor = f_clr;
                 }      
             ` 
-            
-        this.prog = program_init(VertexShaderText, FragmentShaderText)
+        this.prog = program_init(VertexShaderText, FragmentShaderText);
+        gl.useProgram(this.prog);
+
+        this.clr = gl.getAttribLocation(prog, 'clr');
+        this.pos = gl.getAttribLocation(prog, 'pos');
+
+        this.triangle_buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.triangle_buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertex), gl.STATIC_DRAW);
+       
+        this.color_buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.triangle_buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.this.colors), gl.STATIC_DRAW);
     }
 
 
     draw(w_v)
     {
         var m_v = m_mult(v_w, this.w_m); 
-        
+
+        gl.vertexAttribPointer(this.pos, 3, gl.FLOAT, false, 3*Float32Array.BYTES_PER_ELEMENT,0);
+        gl.vertexAttribPointer(this.pos, 4, gl.FLOAT, false, 4*Float32Array.BYTES_PER_ELEMENT,0);
     }
     
 }
