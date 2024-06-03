@@ -1,3 +1,16 @@
+
+class vec3 
+{
+    constructor(x,y,z)
+    {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+}
+
+
 /*function m_mult( A, B )
 {
 	var C = [];
@@ -11,9 +24,9 @@
 		}
 	}
 	return C;
-}*/
+}
 
-/*function trans(scale = 1, dir = vec3(0,0,0), pos = vec3(0,0,0)) //first scale, second rotation, then translation
+function trans(scale = 1, dir = vec3(0,0,0), pos = vec3(0,0,0)) //first scale, second rotation, then translation
 {
     var t = [1,0,0,0,
             0,1,0,0,
@@ -27,14 +40,8 @@
                         0, 0, 1, 0,
                         0, 0, 0, 1];
             
-            const Rz = [Math.cos(dir.z), Math.sin(dir.z) , 0 ,0,
-                        -Math.sin(dir.z),Math.cos(dir.z), 0, 0,
-                        0,0,1,0,
-                        0,0,0,1,]
-            
             t = m_mult(Rz,t);
 
-            //t = m_mult(t,Rz);
         }
 
     if(dir.y != 0)
@@ -96,48 +103,57 @@ function m_mult( A, B )
 
 function trans(scale = 1, dir = vec3(0,0,0), pos = vec3(0,0,0))
 {
-    var r = [1, 0, 0, 0,
-             0, 1, 0, 0,
-             0, 0, 1, 0,
-             0, 0, 0, 1
+    var r = [1.0, 0.0, 0.0, 0.0,
+             0.0, 1.0, 0.0, 0.0,
+             0.0, 0.0, 1.0, 0.0,
+             0.0, 0.0, 0.0, 1.0
     ];
 
     var transl = [
-    	1, 0, 0, 0,
-		0, 1, 0, 0,
-		0, 0, 1, 0,
-		pos.x, pos.y, pos.z, 1
+    	1.0, 0.0, 0.0, 0.0,
+		0.0, 1.0, 0.0, 0.0,
+		0.0, 0.0, 1.0, 0.0,
+		pos.x, pos.y, pos.z, 1.0
 	];
 
     r = m_mult(r,transl);
 
+    var s = [
+       scale, 0.0, 0.0, 0.0,
+       0.0, scale, 0.0, 0.0,
+       0.0, 0.0, scale, 0.0,
+       0.0, 0.0, 0.0, 1.0 
+    ]
+
+    r = m_mult(r,s);
+
     if(dir.z != 0)
         {
             
-            const Rz = [Math.cos(dir.z), Math.sin(dir.z) , 0 ,0,
-                        -Math.sin(dir.z),Math.cos(dir.z), 0, 0,
-                        0,0,1,0,
-                        0,0,0,1,]
+            const Rz = [Math.cos(dir.z), Math.sin(dir.z) , 0.0 ,0.0,
+                        -Math.sin(dir.z),Math.cos(dir.z), 0.0, 0.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 1.0]
 
             t = m_mult(r,Rz);
         }
 
     if(dir.y != 0)
         {
-	        var Ry = [Math.cos(dir.y), 0 , -Math.sin(dir.y), 0,
-		        	0, 1, 0, 0,
-			        Math.sin(dir.y), 0  , Math.cos(dir.y), 0,
-			        0, 0, 0, 1];
+	        var Ry = [Math.cos(dir.y), 0.0 , -Math.sin(dir.y), 0.0,
+		        	0.0, 1.0, 0.0, 0.0,
+			        Math.sin(dir.y), 0.0, Math.cos(dir.y), 0.0,
+			        0.0, 0.0, 0.0, 1.0];
         
             r = m_mult(r, Ry);
         }
 	
 	if(dir.x != 0)
         {
-            var Rx = [1, 0, 0, 0,
-                0, Math.cos(dir.x), Math.sin(dir.x), 0,
-                0, -Math.sin(dir.x), Math.cos(dir.x), 0,
-                0, 0, 0, 1];
+            var Rx = [1.0, 0.0, 0.0, 0.0,
+                0.0, Math.cos(dir.x), Math.sin(dir.x), 0.0,
+                0.0, -Math.sin(dir.x), Math.cos(dir.x), 0.0,
+                0.0, 0.0, 0.0, 1.0];
             
             t = m_mult(r,Rx);
         }
@@ -145,14 +161,3 @@ function trans(scale = 1, dir = vec3(0,0,0), pos = vec3(0,0,0))
 	return r;
 }
 
-
-class vec3 
-{
-    constructor(x,y,z)
-    {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-
-}

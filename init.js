@@ -1,26 +1,15 @@
 var gl;
 var canvas;
-var camera_rotation = new vec3(0,0,0);
+var camera_rotation = new vec3(0.0, 0.0, 0.0);
 var camera_distance = 5.0;
-var test_cube;
+var cube;
 
-function ProjectionMatrix()
+
+function PerspectiveMatrixMaker(fov, back)
 {
-	var r = canvas.width / canvas.height;
-	var n = (camera_distance - 1.74);
-	const min_n = 0.001;
-	if ( n < min_n ) n = min_n;
-	var f = (camera_distance + 1.74);;
-	var fov = 3.145 * 60 / 180;
-	var s = 1 / Math.tan( fov/2 );
-	perspectiveMatrix = [
-		s/r, 0, 0, 0,
-		0, s, 0, 0,
-		0, 0, (n+f)/(f-n), 1,
-		0, 0, -2*n*f/(f-n), 0
-	];
+	var n = -camera_distance;
+	var f = -(camera_distance+back);
 	
-	return perspectiveMatrix;
 }
 
 function UpdateCanvasSize()
@@ -37,15 +26,23 @@ function UpdateCanvasSize()
 
 function draw()
 {
-	gl.clearColor(0.7, 0.2, 0.8, 1.0);
+	ProjectionMatrix();
+	gl.enable(gl.DEPTH_TEST);
+	gl.clearColor((200/255), (162/255), (200/255), 1);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	
-	const proj_mat = ProjectionMatrix();
-	const camera_matrix = trans(1,camera_rotation, new vec3(0,0,camera_distance));
+	////////const proj_mat = perspectiveMatrix;
+	const camera_matrix = trans(1.0 ,camera_rotation, new vec3(-0.2,-0.2, 0.0));
 
 	const v_w =  m_mult(camera_matrix, proj_mat);
-	test_cube.draw(v_w);
 
+	console.log(camera_matrix);
+	//////////console.log(perspectiveMatrix);
+	console.log(v_w);
+
+	//object draw//
+	cube.draw(proj_mat);
+	//////////////
 }
 
 function InitWebGL()
@@ -63,7 +60,9 @@ function InitWebGL()
 		alert('Your browser does not support WebGL');
 	}
 
-    test_cube = new cube_drawer();
+    //objects//
+	cube = new cube_drawer();
+	//////////
 
 	console.log("fatt");
 	UpdateCanvasSize();
