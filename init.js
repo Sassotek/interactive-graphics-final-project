@@ -1,6 +1,8 @@
+var deg2rad = Math.PI/180;
 var canvas, gl;
-var camera_angle = new vec3(0,0,0);
-var cam_z = 3;
+var camera_angle = new vec3(-45,45,0);
+camera_angle.mult(deg2rad);
+var cam_z = 2;
 var camera_position = new vec3(0,0,cam_z)
 var MV, MVP; // view matrices
 var cube;
@@ -17,7 +19,7 @@ function InitWebGL()
 	}
 	
 	// Initialize settings
-	gl.clearColor(0,0,0,0);
+	gl.clearColor(0.9,0.9,0.9,1);
 	gl.enable(gl.DEPTH_TEST);
 	
 	// Initialize the programs and buffers for drawing
@@ -63,7 +65,7 @@ function ProjectionMatrix( c, z, fov_angle=60 )
 
 function UpdateViewMatrices()
 {
-	var perspectiveMatrix = ProjectionMatrix( canvas, cam_z);
+	var perspectiveMatrix = ProjectionMatrix( canvas, camera_position.z);
 	MV  = trans(1, camera_angle, camera_position );
 	MVP = m_mult( perspectiveMatrix, MV );
 }
@@ -72,6 +74,7 @@ function DrawScene()
 {
 	
 	gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+	gl.clearColor(0.9,0.9,0.9,1);
 	
 	cube.draw( MVP );
 }

@@ -8,6 +8,12 @@ class vec3
         this.z = z;
     }
 
+    mult(scalar)
+    {
+        this.x *= scalar;
+        this.y *= scalar;
+        this.z *= scalar;
+    }
 }
 
 
@@ -103,10 +109,11 @@ function m_mult( A, B )
 
 function trans(scale = 1, dir = vec3(0,0,0), pos = vec3(0,0,0))
 {
-    var r = [1.0, 0.0, 0.0, 0.0,
-             0.0, 1.0, 0.0, 0.0,
-             0.0, 0.0, 1.0, 0.0,
-             0.0, 0.0, 0.0, 1.0
+    var r = [
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
     ];
 
     var transl = [
@@ -118,45 +125,58 @@ function trans(scale = 1, dir = vec3(0,0,0), pos = vec3(0,0,0))
 
     r = m_mult(r,transl);
 
-    var s = [
-       scale, 0.0, 0.0, 0.0,
-       0.0, scale, 0.0, 0.0,
-       0.0, 0.0, scale, 0.0,
-       0.0, 0.0, 0.0, 1.0 
-    ]
-
-    r = m_mult(r,s);
-
-    if(dir.z != 0)
+    if(scale != 1)
         {
-            
-            const Rz = [Math.cos(dir.z), Math.sin(dir.z) , 0.0 ,0.0,
-                        -Math.sin(dir.z),Math.cos(dir.z), 0.0, 0.0,
-                        0.0, 0.0, 1.0, 0.0,
-                        0.0, 0.0, 0.0, 1.0]
+            var s = [
+                scale, 0.0, 0.0, 0.0,
+                0.0, scale, 0.0, 0.0,
+                0.0, 0.0, scale, 0.0,
+                0.0, 0.0, 0.0, 1.0 
+            ];
+         
+             r = m_mult(r,s);
+        }
 
-            t = m_mult(r,Rz);
+    if(dir.x != 0)
+        {
+            var Rx = [
+                1.0, 0.0, 0.0, 0.0,
+                0.0, Math.cos(dir.x), Math.sin(dir.x), 0.0,
+                0.0, -Math.sin(dir.x), Math.cos(dir.x), 0.0,
+                0.0, 0.0, 0.0, 1.0
+            ];
+            
+            r = m_mult(r,Rx);
+            console.log("multiplied x");
         }
 
     if(dir.y != 0)
         {
-	        var Ry = [Math.cos(dir.y), 0.0 , -Math.sin(dir.y), 0.0,
-		        	0.0, 1.0, 0.0, 0.0,
-			        Math.sin(dir.y), 0.0, Math.cos(dir.y), 0.0,
-			        0.0, 0.0, 0.0, 1.0];
+	        var Ry = [
+                Math.cos(dir.y), 0.0 , -Math.sin(dir.y), 0.0,
+		        0.0, 1.0, 0.0, 0.0,
+			    Math.sin(dir.y), 0.0, Math.cos(dir.y), 0.0,
+			    0.0, 0.0, 0.0, 1.0
+            ];
         
             r = m_mult(r, Ry);
+            console.log("multiplied y");
         }
 	
-	if(dir.x != 0)
+	 if(dir.z != 0)
         {
-            var Rx = [1.0, 0.0, 0.0, 0.0,
-                0.0, Math.cos(dir.x), Math.sin(dir.x), 0.0,
-                0.0, -Math.sin(dir.x), Math.cos(dir.x), 0.0,
-                0.0, 0.0, 0.0, 1.0];
             
-            t = m_mult(r,Rx);
+            const Rz = [
+                Math.cos(dir.z), Math.sin(dir.z) , 0.0 ,0.0,
+                -Math.sin(dir.z),Math.cos(dir.z), 0.0, 0.0,
+                0.0, 0.0, 1.0, 0.0,
+                0.0, 0.0, 0.0, 1.0
+            ];
+
+            r = m_mult(r,Rz);
+            console.log("multiplied z");
         }
+
 
 	return r;
 }
