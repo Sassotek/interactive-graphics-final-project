@@ -1,81 +1,77 @@
-var gl;
-var canvas;
-var camera_rotation = new vec3(0.0, 0.0, 0.0);
-var camera_distance = 5.0;
+var canvas, gl;
+var camera_angle = new vec3(0,0,0);
+var cam_z = 3;
+var camera_position = new vec3(0,0,cam_z)
+var MV, MVP; // view matrices
 var cube;
 
-
-function PerspectiveMatrixMaker(fov, back)
+// Called once to initialize
+function InitWebGL()
 {
-
-	var n = -camera_distance;
-	var f = -(camera_distance+back);
+	// Initialize the WebGL canvas
+	canvas = document.getElementById("scene");
+	gl = canvas.getContext("webgl", {antialias: false, depth: true});	// Initialize the GL context
+	if (!gl) {
+		alert("Unable to initialize WebGL. Your browser or machine may not support it.");
+		return;
+	}
 	
+	// Initialize settings
+	gl.clearColor(0,0,0,0);
+	gl.enable(gl.DEPTH_TEST);
+	
+	// Initialize the programs and buffers for drawing
+	cube = new cube_drawer();
+	
+	// Set the viewport size
+	UpdateCanvasSize();
+	DrawScene();
 }
 
+// Called every time the window size is changed.
 function UpdateCanvasSize()
 {
 	canvas.style.width  = "100%";
 	canvas.style.height = "100%";
-	const pixel_ratio = window.devicePixelRatio || 1;
-    canvas.width = pixel_ratio*canvas.clientWidth;
-    canvas.height = pixel_ratio*canvas.clientHeight;
-	const width  = (canvas.width  / pixel_ratio);
-	const height = (canvas.height / pixel_ratio);
+	const pixelRatio = window.devicePixelRatio || 1;
+	canvas.width  = pixelRatio * canvas.clientWidth;
+	canvas.height = pixelRatio * canvas.clientHeight;
+	const width  = (canvas.width  / pixelRatio);
+	const height = (canvas.height / pixelRatio);
 	canvas.style.width  = width  + 'px';
 	canvas.style.height = height + 'px';
-	gl.viewport(0,0,canvas.width,canvas.height);
-
-    gl.clearColor(0.7, 0.2, 0.8, 1.0);
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-	gl.enable(gl.DEPTH_TEST);
+	gl.viewport( 0, 0, canvas.width, canvas.height );
+	UpdateViewMatrices();
 }
 
-function draw()
+function ProjectionMatrix( c, z, fov_angle=60 )
+{
+	var r = c.width / c.height;
+	var n = (z - 1.74);
+	const min_n = 0.001;
+	if ( n < min_n ) n = min_n;
+	var f = (z + 1.74);;
+	var fov = 3.145 * fov_angle / 180;
+	var s = 1 / Math.tan( fov/2 );
+	return [
+		s/r, 0, 0, 0,
+		0, s, 0, 0,
+		0, 0, (n+f)/(f-n), 1,
+		0, 0, -2*n*f/(f-n), 0
+	];
+}
+
+function UpdateViewMatrices()
+{
+	var perspectiveMatrix = ProjectionMatrix( canvas, cam_z);
+	MV  = trans(1, camera_angle, camera_position );
+	MVP = m_mult( perspectiveMatrix, MV );
+}
+
+function DrawScene()
 {
 	
-	gl.enable(gl.DEPTH_TEST);
-	gl.clearColor((200/255), (162/255), (200/255), 1);
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-/*	
-	const proj_mat = perspectiveMatrix;
-	const camera_matrix = trans(1.0 ,camera_rotation, new vec3(-0.2,-0.2, 0.0));
-
-	const v_w =  m_mult(camera_matrix, proj_mat);
-
-	console.log(camera_matrix);
-	console.log(perspectiveMatrix);
-	console.log(v_w);
-
-	//object draw//
-	cube.draw(proj_mat);
-	//////////////
-	*/
-}
-
-function InitWebGL()
-{
-    
-    canvas = document.getElementById('scene');
-	gl = canvas.getContext('webgl');
-
-	if (!gl) {
-		console.log('WebGL not supported, falling back on experimental-webgl');
-		gl = canvas.getContext('experimental-webgl');
-	}
-
-	if (!gl) {
-		alert('Your browser does not support WebGL');
-	}
-
-    //objects//
-	cube = new cube_drawer();
-	//////////
-
-	console.log("fatt");
-	UpdateCanvasSize();
-	draw();
-
-
-    return;
+	gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+	
+	cube.draw( MVP );
 }
