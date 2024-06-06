@@ -10,20 +10,30 @@ class vec3
 
     sum(elem)
     {
-        switch(elem.lenght)
-        {
-            case 1:
-                this.x += elem;
-                this.y += elem;
-                this.z += elem;
-                break;
-            
-            case 3:
+        if(elem instanceof vec3)
+            {
+                console.log("vertex sum");
                 this.x += elem.x;
                 this.y += elem.y;
                 this.z += elem.z;
-                break;
-        }
+            }
+
+        else if(elem === 'number')
+            {
+                console.log("scalar sum");
+                this.x += elem;
+                this.y += elem;
+                this.z += elem;
+            }    
+            
+        else if(Array.isArray(elem) && elem.length === 3)
+            {
+                console.log("array sum");
+                this.x += elem[0];
+                this.y += elem[1];
+                this.z += elem[2];
+            }
+               
     }
 
     mult(scalar)
@@ -169,7 +179,7 @@ function trans(scale = 1, dir = vec3(0,0,0), pos = vec3(0,0,0))
             ];
             
             r = m_mult(r,Rx);
-            console.log("multiplied x");
+            //console.log("multiplied x");
         }
 
     if(dir.y != 0)
@@ -182,7 +192,7 @@ function trans(scale = 1, dir = vec3(0,0,0), pos = vec3(0,0,0))
             ];
         
             r = m_mult(r, Ry);
-            console.log("multiplied y");
+            //console.log("multiplied y");
         }
 	
 	 if(dir.z != 0)
@@ -196,7 +206,7 @@ function trans(scale = 1, dir = vec3(0,0,0), pos = vec3(0,0,0))
             ];
 
             r = m_mult(r,Rz);
-            console.log("multiplied z");
+            //console.log("multiplied z");
         }
 
 

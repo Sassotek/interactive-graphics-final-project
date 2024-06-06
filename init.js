@@ -2,7 +2,7 @@ var deg2rad = Math.PI/180;
 var canvas, gl;
 var camera_angle = new vec3(-45,45,0);
 camera_angle.mult(deg2rad);
-var cam_z = 2;
+var cam_z = 5;
 var camera_position = new vec3(0,0,cam_z)
 var MV, MVP; // view matrices
 var cube;

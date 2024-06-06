@@ -9,10 +9,12 @@ obj_constructor.js
 
 roadmap:
 
-make a functional scene render.
-initial plane.
-camera movement.
+make a functional scene render---->done
+camera movement---->done
+skybox
 starman on blender
+lighting
+initial plane
 make other planets mesh
 normal textures
 reflective textures

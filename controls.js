@@ -1,3 +1,6 @@
+var isMouseDown = false;
+var cx;
+var cy;
 canvas_zoom = function( s ) 
 {
 	camera_position.z *= s/canvas.height + 1;
@@ -7,31 +10,28 @@ canvas_zoom = function( s )
 
 function eventHandler(event)
 {
-    var isMouseDown = false;
-    var cx = event.clientx;
-    var cy = event.clientY;
     switch(event.type)
     {
         case "wheel":
             canvas_zoom(0.3*event.deltaY);
             break;
         case "mousedown":
-            console.log("mouse down");
+            //console.log("mouse down");
+            cx = event.clientX;
+            cy = event.clientY;
             isMouseDown = true;
-            console.log(isMouseDown);
             break;
 
         case "mouseup":
-            console.log("mouse up");
+            //console.log("mouse up");
             isMouseDown = false; 
-            console.log(isMouseDown);
             break;
 
         case "mousemove":
             if(isMouseDown)
                 {
-                    console.log("mouse move");
-                    coord = new vec3((cy - event.clientY)/canvas.height*5, (cx - event.clientX)/canvas.width*5, 0);
+                    //console.log("mouse move");
+                    coord = [(cy - event.clientY)/canvas.height*5, (cx - event.clientX)/canvas.width*5, 0];
                     camera_angle.sum(coord);
                     cx = event.clientX;
                     cy = event.clientY;
@@ -51,3 +51,11 @@ window.onload = function()
     canvas.addEventListener("mouseup", eventHandler);
     canvas.addEventListener("mousemove", eventHandler);
 }
+
+function WindowResize()
+{
+	UpdateCanvasSize();
+	DrawScene();
+}
+
+window.addEventListener("resize", WindowResize);
