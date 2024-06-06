@@ -52,7 +52,7 @@ function ProjectionMatrix( c, z, fov_angle=60 )
 	var n = (z - 1.74);
 	const min_n = 0.001;
 	if ( n < min_n ) n = min_n;
-	var f = (z + 1.74);;
+	var f = (z + 1.74);
 	var fov = 3.145 * fov_angle / 180;
 	var s = 1 / Math.tan( fov/2 );
 	return [

@@ -8,12 +8,34 @@ class vec3
         this.z = z;
     }
 
+    sum(elem)
+    {
+        switch(elem.lenght)
+        {
+            case 1:
+                this.x += elem;
+                this.y += elem;
+                this.z += elem;
+                break;
+            
+            case 3:
+                this.x += elem.x;
+                this.y += elem.y;
+                this.z += elem.z;
+                break;
+        }
+    }
+
     mult(scalar)
     {
         this.x *= scalar;
         this.y *= scalar;
         this.z *= scalar;
     }
+
+    setX(x){this.x = x;}
+    setY(y){this.y = y;}
+    setZ(z){this.z = z;}
 }
 
 
