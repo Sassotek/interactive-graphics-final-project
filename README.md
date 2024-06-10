@@ -12,12 +12,9 @@ roadmap:
 make a functional scene render---->done
 camera movement---->done
 skybox
-starman on blender
+starman
+planets
 lighting
-initial plane
-make other planets mesh
-normal textures
-reflective textures
 Ray Tracing for reflectance and shadow 
 starman animation 
 planet animation
