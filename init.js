@@ -4,7 +4,7 @@ var camera_angle = new vec3(-45,45,0);
 camera_angle.mult(deg2rad);
 var cam_z = 5;
 var camera_position = new vec3(0,0,cam_z)
-var MV, MVP; // view matrices
+var CV, MVP1, MVP2; // view matrices
 var cube, cube_far;
 
 // Called once to initialize
@@ -24,11 +24,7 @@ function InitWebGL()
 	
 	// Initialize the programs and buffers for drawing
 	cube = new cube_drawer();
-	cube_far = new cube_drawer([
-		1,0,0,0,
-		0,1,0,0,
-		0,0,1,0,
-		0.5,0,0,1]);
+	cube_far = new cube_drawer();
 	
 	// Set the viewport size
 	UpdateCanvasSize();
@@ -51,13 +47,11 @@ function UpdateCanvasSize()
 	UpdateViewMatrices();
 }
 
-function ProjectionMatrix( c, z, fov_angle=60 )
+function ProjectionMatrix( c, fov_angle=60 )
 {
 	var r = c.width / c.height;
-	var n = (z - 1.74);
-	const min_n = 0.001;
-	if ( n < min_n ) n = min_n;
-	var f = (z + 1.74);
+	var n = 0.1;
+	var f = 10.0;
 	var fov = 3.145 * fov_angle / 180;
 	var s = 1 / Math.tan( fov/2 );
 	return [
@@ -70,9 +64,15 @@ function ProjectionMatrix( c, z, fov_angle=60 )
 
 function UpdateViewMatrices()
 {
-	var perspectiveMatrix = ProjectionMatrix( canvas, camera_position.z);
-	MV  = trans(1, camera_angle, camera_position );
-	MVP = m_mult( perspectiveMatrix, MV );
+	var perspectiveMatrix = ProjectionMatrix(canvas);
+	CV  = trans(1, camera_angle, camera_position );
+	MVP1 = m_mult(perspectiveMatrix, CV);
+	MVP2 = m_mult(perspectiveMatrix, m_mult(CV, [
+		1,0,0,0,
+		0,1,0,0,
+		0,0,1,0,
+		2,0,0,1
+	]));
 }
 
 function DrawScene()
@@ -81,6 +81,16 @@ function DrawScene()
 	gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 	gl.clearColor(0.9,0.9,0.9,1);
 	
-	cube.draw( MVP );
-	cube_far.draw(MVP);
+	var perspectiveMatrix = ProjectionMatrix(canvas);
+	CV  = trans(1, camera_angle, camera_position );
+	MVP1 = m_mult(perspectiveMatrix, CV);
+	MVP2 = m_mult(perspectiveMatrix, m_mult(CV, [
+		1,0,0,0,
+		0,1,0,0,
+		0,0,1,0,
+		2,0,0,1
+	]));
+
+	cube.draw(MVP1);
+	cube_far.draw(MVP2);
 }

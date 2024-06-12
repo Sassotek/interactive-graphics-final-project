@@ -93,13 +93,8 @@ function parse_obj(objdata)
 
 class cube_drawer
 {
-    constructor(mw = [
-        1,0,0,0,
-        0,1,0,0,
-        0,0,1,0,
-        0,0,0,1])
+    constructor()
     {   
-        this.mw = mw;
         //cube shape
         this.vertices = [                    
         // Front face
@@ -247,7 +242,7 @@ class cube_drawer
         this.num_triangles = this.vertices.length / 3;
         gl.useProgram(this.prog);
     
-        gl.uniformMatrix4fv(this.mvp, false, m_mult(this.mw, v_w));
+        gl.uniformMatrix4fv(this.mvp, false, v_w);
         
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.vertexAttribPointer(this.pos, 3, gl.FLOAT, gl.FALSE , 3* Float32Array.BYTES_PER_ELEMENT , 0);
