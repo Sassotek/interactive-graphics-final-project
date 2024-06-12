@@ -5,7 +5,7 @@ camera_angle.mult(deg2rad);
 var cam_z = 5;
 var camera_position = new vec3(0,0,cam_z)
 var MV, MVP; // view matrices
-var cube;
+var cube, cube_far;
 
 // Called once to initialize
 function InitWebGL()
@@ -24,6 +24,11 @@ function InitWebGL()
 	
 	// Initialize the programs and buffers for drawing
 	cube = new cube_drawer();
+	cube_far = new cube_drawer([
+		1,0,0,0,
+		0,1,0,0,
+		0,0,1,0,
+		0.5,0,0,1]);
 	
 	// Set the viewport size
 	UpdateCanvasSize();
@@ -77,4 +82,5 @@ function DrawScene()
 	gl.clearColor(0.9,0.9,0.9,1);
 	
 	cube.draw( MVP );
+	cube_far.draw(MVP);
 }

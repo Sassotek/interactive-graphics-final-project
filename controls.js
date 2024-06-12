@@ -1,6 +1,9 @@
 var isMouseDown = false;
 var cx;
 var cy;
+var viewRotX;
+var viewRotZ;
+
 canvas_zoom = function( s ) 
 {
 	camera_position.z *= s/canvas.height + 1;
