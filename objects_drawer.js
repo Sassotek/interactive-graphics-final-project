@@ -36,61 +36,6 @@ function program_init(vertex_shader_text , fragment_shader_text)
 }
 
 
-function parse_obj(objdata)
-{
-	var lines = objdata.split('\n');
-	for ( var i=0; i<lines.length; ++i ) {
-		var line = lines[i].trim();
-		var elem = line.split(/\s+/);
-		switch ( elem[0][0] ) {
-			case 'v':
-				switch ( elem[0].length ) 
-                {
-					case 1:
-						this.vpos.push( [ parseFloat(elem[1]), parseFloat(elem[2]), parseFloat(elem[3]) ] );
-						break;
-					case 2:
-						switch ( elem[0][1] ) 
-                        {
-							case 't':
-								this.tpos.push( [ parseFloat(elem[1]), parseFloat(elem[2]) ] );
-								break;
-							case 'n':
-							    this.norm.push( [ parseFloat(elem[1]), parseFloat(elem[2]), parseFloat(elem[3]) ] );
-								break;
-						}
-						break;
-				}
-				break;
-			case 'f':
-				var f=[], tf=[], nf=[];
-				for ( var j=1; j<elem.length; ++j ) 
-                    {
-					    var ids = elem[j].split('/');
-					    var vid = parseInt(ids[0]);
-					    if ( vid < 0 ) vid = this.vpos.length + vid + 1;
-					    f.push( vid - 1 );
-					    if ( ids.length > 1 && ids[1] !== "" ) 
-                            {
-						        var tid = parseInt(ids[1]);
-						        if ( tid < 0 ) tid = this.tpos.length + tid + 1;
-						        tf.push( tid - 1 );
-					        }
-					    if ( ids.length > 2 && ids[2] !== "" ) 
-                            {
-						        var nid = parseInt(ids[2]);
-						        if ( nid < 0 ) nid = this.norm.length + nid + 1;
-						        nf.push( nid - 1 );
-					        }
-				    }
-				this.face.push(f);
-				if ( tf.length ) this.tfac.push(tf);
-				if ( nf.length ) this.nfac.push(nf);
-				break;
-		}
-	}
-}
-
 class cube_drawer
 {
     constructor()
@@ -256,6 +201,14 @@ class cube_drawer
        
     }
     
+}
+
+
+
+
+class quaoar_drawer
+{
+  
 }
 
 

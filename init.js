@@ -5,7 +5,7 @@ camera_angle.mult(deg2rad);
 var cam_z = 5;
 var camera_position = new vec3(0,0,cam_z)
 var CV, MVP1, MVP2; // view matrices
-var cube, cube_far;
+var cube, cube_far, quaoar;
 
 // Called once to initialize
 function InitWebGL()
@@ -24,6 +24,7 @@ function InitWebGL()
 	
 	// Initialize the programs and buffers for drawing
 	cube = new cube_drawer();
+	quaoar = new quaoar_drawer();
 	cube_far = new cube_drawer();
 	
 	// Set the viewport size
