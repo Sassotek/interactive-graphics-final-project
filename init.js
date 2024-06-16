@@ -22,6 +22,7 @@ function InitWebGL()
 	gl.clearColor(0.9,0.9,0.9,1);
 	gl.enable(gl.DEPTH_TEST);
 	
+	//var test = load_url("https://it.wikipedia.org/wiki/Lutrinae#/media/File:European_otter_02.jpg", function(){console.log("ok");});
 	// Initialize the programs and buffers for drawing
 	cube = new cube_drawer();
 	quaoar = new quaoar_drawer();

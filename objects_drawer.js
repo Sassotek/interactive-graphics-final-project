@@ -36,6 +36,40 @@ function program_init(vertex_shader_text , fragment_shader_text)
 }
 
 
+function load_url(url, callback, is_image = true)
+{
+    var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() 
+    {
+		if (this.readyState == 4 && this.status == 200) 
+            {
+                if (is_image) 
+                    {
+                        var blob = new Blob([this.response], {type: 'image/jpeg'});
+                        var imageUrl = URL.createObjectURL(blob);
+                        callback(imageUrl);
+                    } 
+                else 
+                    {
+                        callback(this.responseText);
+                    }
+            }
+        else 
+            {
+                console.error('Failed to load URL:', this.status, this.statusText);
+                callback(null);
+            }
+    }
+
+    if (is_image) 
+        {
+            xhttp.responseType = 'blob';
+        }
+	xhttp.open("GET", url, true);
+	xhttp.send();
+}
+
+
 class cube_drawer
 {
     constructor()
@@ -208,7 +242,7 @@ class cube_drawer
 
 class quaoar_drawer
 {
-  
+
 }
 
 
