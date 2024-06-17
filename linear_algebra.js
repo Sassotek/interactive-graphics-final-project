@@ -12,7 +12,7 @@ class vec3
     {
         if(elem instanceof vec3)
             {
-                console.log("vertex sum");
+                //console.log("vertex sum");
                 this.x += elem.x;
                 this.y += elem.y;
                 this.z += elem.z;
@@ -20,7 +20,7 @@ class vec3
 
         else if(elem === 'number')
             {
-                console.log("scalar sum");
+                //console.log("scalar sum");
                 this.x += elem;
                 this.y += elem;
                 this.z += elem;
@@ -28,7 +28,7 @@ class vec3
             
         else if(Array.isArray(elem) && elem.length === 3)
             {
-                console.log("array sum");
+                //console.log("array sum");
                 this.x += elem[0];
                 this.y += elem[1];
                 this.z += elem[2];

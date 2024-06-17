@@ -36,37 +36,17 @@ function program_init(vertex_shader_text , fragment_shader_text)
 }
 
 
-function load_url(url, callback, is_image = true)
+function load_url(filePath)
 {
-    var xhttp = new XMLHttpRequest();
-	xhttp.onreadystatechange = function() 
-    {
-		if (this.readyState == 4 && this.status == 200) 
-            {
-                if (is_image) 
-                    {
-                        var blob = new Blob([this.response], {type: 'image/jpeg'});
-                        var imageUrl = URL.createObjectURL(blob);
-                        callback(imageUrl);
-                    } 
-                else 
-                    {
-                        callback(this.responseText);
-                    }
-            }
-        else 
-            {
-                console.error('Failed to load URL:', this.status, this.statusText);
-                callback(null);
-            }
+    var result = null;
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.open("GET", filePath, false);
+    xmlhttp.send();
+    if (xmlhttp.status==200) {
+      result = xmlhttp.responseText;
+      console.log(result);
     }
-
-    if (is_image) 
-        {
-            xhttp.responseType = 'blob';
-        }
-	xhttp.open("GET", url, true);
-	xhttp.send();
+    return result;
 }
 
 
@@ -243,6 +223,46 @@ class cube_drawer
 class quaoar_drawer
 {
 
+    constructor()
+    {
+        this.obj_file = load_url("http://0.0.0.0:8000/Quaoar.obj");
+        this.tex_img = load_url("http://0.0.0.0:8000/quaoar_texture.png");
+        
+        var VertexShaderText = `
+                precision mediump float;
+
+                uniform mat4 mvp;
+
+                attribute vec3 pos;
+                attribute vec2 tex_coord;
+
+                varying vec2 v_tex_coord;
+
+                void main()
+                {
+                    gl_Position = mvp*vec4(pos,1);
+                    tex_coord = v_tex_coord;
+                }
+            `;
+
+        var FragmentShaderText = `
+                precision mediump float;
+
+                uniform sampler2D sampler;
+
+                varying vec2 v_tex_coord;
+
+                void main()
+                {
+                    gl_FragColor(sampler, v_tex_coord);
+                }
+            `;
+    }
+
+    draw(m_v)
+    {
+
+    }
 }
 
 
