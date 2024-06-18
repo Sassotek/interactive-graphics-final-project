@@ -36,17 +36,35 @@ function program_init(vertex_shader_text , fragment_shader_text)
 }
 
 
-function load_url(filePath)
+function load_url(filePath, type)
 {
-    var result = null;
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.open("GET", filePath, false);
-    xmlhttp.send();
-    if (xmlhttp.status==200) {
-      result = xmlhttp.responseText;
-      //console.log(result);
-    }
-    return result;
+    return new Promise((resolve,reject)=>
+        {
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.open("GET", filePath, true);
+            
+            if(type == "img") xmlhttp.responseType = "blob";
+            else if(type == "txt")  xmlhttp.responseType = "text";
+
+            xmlhttp.onload = function () 
+            {
+                if (request.status === 200) 
+                    {
+                        resolve(request.response);
+                    } 
+                else 
+                    {
+                        reject(new Error('Image didn\'t load successfully; error code:' + request.statusText));
+                    }
+            };
+            
+            xmlhttp.onerror = function()
+            {
+                reject(new Error("Network error."));
+            };
+        
+            xmlhttp.send();
+        });
 }
 
 
@@ -375,11 +393,12 @@ class quaoar_drawer
 
     constructor()
     {
-        this.obj_file = load_url("http://0.0.0.0:8000/Quaoar.obj");
-        this.tex_file = load_url("http://0.0.0.0:8000/quaoar_texture.png");
+        this.obj_file = load_url("http://0.0.0.0:8000/Quaoar.obj", "txt");
+        this.tex_file = load_url("http://0.0.0.0:8000/quaoar_texture.png", "img");
 
         tex_img = new Image();
-        var imageURL = window.URL.createObjectURL();
+        var imageURL = window.URL.createObjectURL(this.tex_file);
+        tex_img.src = imageURL;
 
         
         this.VertexShaderText = `
