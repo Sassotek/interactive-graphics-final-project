@@ -6,7 +6,12 @@ var cam_z = 5;
 var camera_position = new vec3(0,0,cam_z)
 var CV, MVP1, MVP2; // view matrices
 var cube, cube_far, quaoar;
-
+var quaoar_matrix = [
+	1,0,0,0,
+	0,1,0,0,
+	0,0,1,0,
+	10,2,5,1
+];
 
 // Called once to initialize
 function InitWebGL()
@@ -54,7 +59,7 @@ function ProjectionMatrix( c, fov_angle=60 )
 {
 	var r = c.width / c.height;
 	var n = 0.1;
-	var f = 10.0;
+	var f = 20.0;
 	var fov = 3.145 * fov_angle / 180;
 	var s = 1 / Math.tan( fov/2 );
 	return [
@@ -80,14 +85,25 @@ function UpdateViewMatrices()
 
 function image_loader(image_id, mesh)
 {
-	console.log(image_id);
     var img = document.getElementById(image_id);
+	img.crossOrigin = "anonymus";
 
-    img.onload = function() 
-    {
-        mesh.setTexture(img);
-        DrawScene();
-    }
+	/*if(img.complete)
+		{
+			img.crossOrigin = "";
+			console.log("ciau");
+			mesh.set_texture(img);
+			DrawScene();
+		} 
+		else 
+		{*/
+	img.onload = () => 
+		{
+		console.log("ciau");
+		mesh.set_texture(img);
+		DrawScene();		
+		}
+	 	
 }
 
 function DrawScene()
@@ -98,13 +114,8 @@ function DrawScene()
 	var perspectiveMatrix = ProjectionMatrix(canvas);
 	CV  = trans(1, camera_angle, camera_position );
 	MVP1 = m_mult(perspectiveMatrix, CV);
-	MVP2 = m_mult(perspectiveMatrix, m_mult(CV, [
-		1,0,0,0,
-		0,1,0,0,
-		0,0,1,0,
-		2,0,0,1
-	]));
+	MVP_quaoar = m_mult(perspectiveMatrix, m_mult(CV, quaoar_matrix));
 
 	cube.draw(MVP1);
-	quaoar.draw(MVP2);
+	quaoar.draw(MVP_quaoar);
 }

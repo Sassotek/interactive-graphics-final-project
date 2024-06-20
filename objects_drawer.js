@@ -53,153 +53,101 @@ function obj_loader(url)
     return result;
 }
 
-function obj_parser(obj_data)
-{
+function obj_parser(objdata) {
+    var vpos = [];
+    var tpos = [];
+    var norm = [];
+    var face = [];
+    var tfac = [];
+    var nfac = [];
 
-    var ver_pos = [];
-    var faces = [];
-    var tex_pos = [];
-    var t_faces = [];
-    var norm_pos = [];
-    var n_faces = [];
+    var lines = objdata.split('\n');
 
-    var lines = obj_data.split('\n');
-    for ( var i=0; i<lines.length; ++i ) 
-        {
-            var line = lines[i].trim();
-            var elem = line.split(/\s+/);
-            switch ( elem[0][0] ) {
-                case 'v':
-                    switch ( elem[0].length ) 
-                    {
-                        case 1:
-                            ver_pos.push( [ parseFloat(elem[1]), parseFloat(elem[2]), parseFloat(elem[3]) ] );
-                            break;
-                        case 2:
-                            switch ( elem[0][1] ) 
-                            {
-                                case 't':
-                                    tex_pos.push( [ parseFloat(elem[1]), parseFloat(elem[2]) ] );
-                                    break;
-                                case 'n':
-                                    norm_pos.push( [ parseFloat(elem[1]), parseFloat(elem[2]), parseFloat(elem[3]) ] );
-                                    break;
-                            }
-                            break;
-                    }
-                break;
-                
-                case 'f':
-                    var f=[], tf=[], nf=[];
-                    for ( var j=1; j<elem.length; ++j ) 
-                        {
-                            var ids = elem[j].split('/');
-                            var vid = parseInt(ids[0]);
-                            if ( vid < 0 ) vid = ver_pos.length + vid + 1;
-                            f.push( vid - 1 );
-                            if ( ids.length > 1 && ids[1] !== "" ) 
-                                {
-                                    var tid = parseInt(ids[1]);
-                                    if ( tid < 0 ) tid = tex_pos.length + tid + 1;
-                                    tf.push( tid - 1 );
-                                }
-                            if ( ids.length > 2 && ids[2] !== "" ) 
-                                {
-                                    var nid = parseInt(ids[2]);
-                                    if ( nid < 0 ) nid = norm_pos.length + nid + 1;
-                                    nf.push( nid - 1 );
-                                }
-                        }
-                faces.push(f);
-                if ( tf.length ) t_faces.push(tf);
-                if ( nf.length ) n_faces.push(nf);
-                break;
+    lines.forEach(function(line) {
+        var trimmedLine = line.trim();
+        if (trimmedLine.startsWith('v ')) {
+            var elements = trimmedLine.split(/\s+/);
+            vpos.push([parseFloat(elements[1]), parseFloat(elements[2]), parseFloat(elements[3])]);
+        } else if (trimmedLine.startsWith('vt ')) {
+            var elements = trimmedLine.split(/\s+/);
+            tpos.push([parseFloat(elements[1]), parseFloat(elements[2])]);
+        } else if (trimmedLine.startsWith('vn ')) {
+            var elements = trimmedLine.split(/\s+/);
+            norm.push([parseFloat(elements[1]), parseFloat(elements[2]), parseFloat(elements[3])]);
+        } else if (trimmedLine.startsWith('f ')) {
+            var elements = trimmedLine.split(/\s+/);
+            var f = [];
+            var tf = [];
+            var nf = [];
+            for (var i = 1; i < elements.length; ++i) {
+                var ids = elements[i].split('/');
+                var vid = parseInt(ids[0]);
+                if (vid < 0) vid = vpos.length + vid + 1;
+                f.push(vid - 1);
+                if (ids.length > 1 && ids[1] !== "") {
+                    var tid = parseInt(ids[1]);
+                    if (tid < 0) tid = tpos.length + tid + 1;
+                    tf.push(tid - 1);
+                }
+                if (ids.length > 2 && ids[2] !== "") {
+                    var nid = parseInt(ids[2]);
+                    if (nid < 0) nid = norm.length + nid + 1;
+                    nf.push(nid - 1);
+                }
+            }
+            face.push(f);
+            if (tf.length) tfac.push(tf);
+            if (nf.length) nfac.push(nf);
+        }
+    });
+
+    function addTriangleToBuffers(vBuffer, tBuffer, nBuffer, fi, i, j, k) {
+        var f = face[fi];
+        var tf = tfac[fi];
+        var nf = nfac[fi];
+        addTriangleToBuffer(vBuffer, vpos, f, i, j, k, addVertToBuffer3);
+        if (tf) {
+            addTriangleToBuffer(tBuffer, tpos, tf, i, j, k, addVertToBuffer2);
+        }
+        if (nf) {
+            addTriangleToBuffer(nBuffer, norm, nf, i, j, k, addVertToBuffer3);
         }
     }
 
-    var vertexBuffer = [];
-    var textureBuffer = [];
-    var normalBuffer = [];
+    function addTriangleToBuffer(buffer, v, f, i, j, k, addVert) {
+        addVert(buffer, v, f, i);
+        addVert(buffer, v, f, j);
+        addVert(buffer, v, f, k);
+    }
 
-    for (var i = 0; i < faces.length; ++i) 
-        {
-            if(faces[i].length < 3) continue;
+    function addVertToBuffer3(buffer, v, f, i) {
+        buffer.push(v[f[i]][0]);
+        buffer.push(v[f[i]][1]);
+        buffer.push(v[f[i]][2]);
+    }
 
-            var f = faces[i];
-            var tf = t_faces[i];
-            var nf = n_faces[i];
+    function addVertToBuffer2(buffer, v, f, i) {
+        buffer.push(v[f[i]][0]);
+        buffer.push(v[f[i]][1]);
+    }
 
-            vertexBuffer.push(ver_pos[f[0]][0]);
-            vertexBuffer.push(ver_pos[f[0]][1]);
-            vertexBuffer.push(ver_pos[f[0]][2]);
-            vertexBuffer.push(ver_pos[f[1]][0]);
-            vertexBuffer.push(ver_pos[f[1]][1]);
-            vertexBuffer.push(ver_pos[f[1]][2]);
-            vertexBuffer.push(ver_pos[f[2]][0]);
-            vertexBuffer.push(ver_pos[f[2]][1]);
-            vertexBuffer.push(ver_pos[f[2]][2]);
-            
-            if(tf)
-                {
-                    textureBuffer.push(tex_pos[tf[0]][0]);
-                    textureBuffer.push(tex_pos[tf[0]][1]);
-                    textureBuffer.push(tex_pos[tf[1]][0]);
-                    textureBuffer.push(tex_pos[tf[1]][1]);
-                    textureBuffer.push(tex_pos[tf[2]][0]);
-                    textureBuffer.push(tex_pos[tf[2]][1]);
-                }
+    var vBuffer = [];
+    var tBuffer = [];
+    var nBuffer = [];
 
-            if(nf)
-                {
-                    normalBuffer.push(norm_pos[f[0]][0]);
-                    normalBuffer.push(norm_pos[f[0]][1]);
-                    normalBuffer.push(norm_pos[f[0]][2]);
-                    normalBuffer.push(norm_pos[f[1]][0]);
-                    normalBuffer.push(norm_pos[f[1]][1]);
-                    normalBuffer.push(norm_pos[f[1]][2]);
-                    normalBuffer.push(norm_pos[f[2]][0]);
-                    normalBuffer.push(norm_pos[f[2]][1]);
-                    normalBuffer.push(norm_pos[f[2]][2]);
-                }
-            
-            for(var j = 3; j<faces[i]; ++j)
-                {
-                    vertexBuffer.push(ver_pos[f[0]][0]);
-                    vertexBuffer.push(ver_pos[f[0]][1]);
-                    vertexBuffer.push(ver_pos[f[0]][2]);
-                    vertexBuffer.push(ver_pos[f[j-1]][0]);
-                    vertexBuffer.push(ver_pos[f[j-1]][1]);
-                    vertexBuffer.push(ver_pos[f[j-1]][2]);
-                    vertexBuffer.push(ver_pos[f[j]][0]);
-                    vertexBuffer.push(ver_pos[f[j]][1]);
-                    vertexBuffer.push(ver_pos[f[j]][2]);
-                    
-                    if(tf)
-                        {
-                            textureBuffer.push(tex_pos[tf[0]][0]);
-                            textureBuffer.push(tex_pos[tf[0]][1]);
-                            textureBuffer.push(tex_pos[tf[j-1]][0]);
-                            textureBuffer.push(tex_pos[tf[j-1]][1]);
-                            textureBuffer.push(tex_pos[tf[j]][0]);
-                            textureBuffer.push(tex_pos[tf[j]][1]);
-                        }
-
-                    if(nf)
-                        {
-                            normalBuffer.push(norm_pos[f[0]][0]);
-                            normalBuffer.push(norm_pos[f[0]][1]);
-                            normalBuffer.push(norm_pos[f[0]][2]);
-                            normalBuffer.push(norm_pos[f[j-1]][0]);
-                            normalBuffer.push(norm_pos[f[j-1]][1]);
-                            normalBuffer.push(norm_pos[f[j-1]][2]);
-                            normalBuffer.push(norm_pos[f[j]][0]);
-                            normalBuffer.push(norm_pos[f[j]][1]);
-                            normalBuffer.push(norm_pos[f[j]][2]);
-                        }
-                }
+    for (var i = 0; i < face.length; ++i) {
+        if (face[i].length < 3) continue;
+        addTriangleToBuffers(vBuffer, tBuffer, nBuffer, i, 0, 1, 2);
+        for (var j = 3; j < face[i].length; ++j) {
+            addTriangleToBuffers(vBuffer, tBuffer, nBuffer, i, 0, j - 1, j);
         }
+    }
 
-    return {vertex_buffer: vertexBuffer, texture_buffer: textureBuffer, normal_buffer: normalBuffer};
+    return {
+        vertex_buffer: vBuffer,
+        texture_buffer: tBuffer,
+        normal_buffer: nBuffer
+    };
 }
 
 
@@ -408,7 +356,15 @@ class planet_drawer
 
                 void main()
                 {
+                    if(texture_set)
+                    {
                     gl_FragColor = texture2D(sampler, v_tex_coord);
+                    }
+
+                    else
+                    {
+                    gl_FragColor = vec4(1,0.1,0.5,1);
+                    }
                 }
             `;
         
@@ -459,6 +415,7 @@ class planet_drawer
         
         gl.uniform1i(this.sampler, 0);
         gl.uniform1i(this.texture_set, true);
+        console.log("texture_set");
     }
 
     draw(m_v)
