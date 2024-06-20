@@ -88,3 +88,64 @@ class triangle_drawer
     }
 
 }
+
+function load_url(filePath, type)
+{
+    return new Promise((resolve,reject)=>
+        {
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.open("GET", filePath, true);
+            
+            if(type == "img") xmlhttp.responseType = 'blob';
+            else if(type == "txt")  xmlhttp.responseType = 'text';
+
+            xmlhttp.onload = function () 
+            {
+                if (xmlhttp.status === 200) 
+                    {
+                        //console.log(xmlhttp.response);
+                        resolve(xmlhttp.response);
+                    } 
+                else 
+                    {
+                        reject(new Error('Image didn\'t load successfully; error code:' + xmlhttp.statusText));
+                    }
+            };
+            
+            xmlhttp.onerror = function()
+            {
+                reject(new Error("Network error."));
+            };
+        
+            xmlhttp.send();
+        });
+}
+
+function resource_searcher(obj_url,img_url)
+{
+    obj_string;
+    tex_img = new Image();
+
+    obj_file = load_url(obj_url, "txt").then(text =>{
+        obj_string = text;
+        }).catch(error => {console.log("Error loading obj:", error)});
+
+    //this.tex_file = load_url("http://0.0.0.0:8000/quaoar_texture.png", "img").then(blob =>{
+    tex_file = load_url(img_url, "img").then(blob =>{
+        var imageURL = URL.createObjectURL(blob);
+        tex_img.src = imageURL;
+        }).catch(error => {console.log("Error loading texture:", error)});
+    
+    Promise.all([obj_file, tex_file]).then(() => {
+        tex_img.onload = () =>
+        {
+            /*obj_data = obj_loader(obj_string);
+            vertices = obj_data.vertex_buffer;
+            texture_c = obj_data.texture_buffer;
+            normals = obj_data.normal_buffer;*/
+            return obj_string, tex_img;
+        };
+    }).catch(error => {
+        console.error("Error initializing WebGL:", error);
+    });
+}

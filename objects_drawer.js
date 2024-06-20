@@ -35,40 +35,25 @@ function program_init(vertex_shader_text , fragment_shader_text)
     return prog;
 }
 
-
-function load_url(filePath, type)
+function obj_loader(url)
 {
-    return new Promise((resolve,reject)=>
-        {
-            var xmlhttp = new XMLHttpRequest();
-            xmlhttp.open("GET", filePath, true);
-            
-            if(type == "img") xmlhttp.responseType = "blob";
-            else if(type == "txt")  xmlhttp.responseType = "text";
+    var result = null;
+    var xmlhttp = new XMLHttpRequest();
 
-            xmlhttp.onload = function () 
+	xmlhttp.onreadystatechange = function() 
+    {
+		if (this.readyState == 4 && this.status == 200) 
             {
-                if (request.status === 200) 
-                    {
-                        resolve(request.response);
-                    } 
-                else 
-                    {
-                        reject(new Error('Image didn\'t load successfully; error code:' + request.statusText));
-                    }
-            };
-            
-            xmlhttp.onerror = function()
-            {
-                reject(new Error("Network error."));
-            };
-        
-            xmlhttp.send();
-        });
+                result = xmlhttp.responseText;
+            }
+    }
+
+    xmlhttp.open("GET", url, false);
+    xmlhttp.send();
+    return result;
 }
 
-
-function obj_loader(obj_data)
+function obj_parser(obj_data)
 {
 
     var ver_pos = [];
@@ -387,20 +372,15 @@ class cube_drawer
 
 
 
-
-class quaoar_drawer
+class planet_drawer
 {
 
-    constructor()
+    constructor(obj_url)
     {
-        this.obj_file = load_url("http://0.0.0.0:8000/Quaoar.obj", "txt");
-        this.tex_file = load_url("http://0.0.0.0:8000/quaoar_texture.png", "img");
+        this.vertices = [];
+        this.texture_c = [];
+        this.normals = [];
 
-        tex_img = new Image();
-        var imageURL = window.URL.createObjectURL(this.tex_file);
-        tex_img.src = imageURL;
-
-        
         this.VertexShaderText = `
                 precision mediump float;
 
@@ -422,6 +402,7 @@ class quaoar_drawer
                 precision mediump float;
 
                 uniform sampler2D sampler;
+                uniform bool texture_set;
 
                 varying vec2 v_tex_coord;
 
@@ -431,45 +412,71 @@ class quaoar_drawer
                 }
             `;
         
-        this.obj_data = obj_loader(this.obj_file);
-        
+        this.prog = program_init(this.VertexShaderText, this.FragmentShaderText);
+        gl.useProgram(this.prog);
+
+        this.obj_string = obj_loader(obj_url);
+        this.obj_data = obj_parser(this.obj_string);
         this.vertices = this.obj_data.vertex_buffer;
         this.texture_c = this.obj_data.texture_buffer;
         this.normals = this.obj_data.normal_buffer;
 
-        this.prog = program_init(this.VertexShaderText, this.FragmentShaderText);
-        gl.useProgram(this.prog);
+        this.pos = gl.getAttribLocation(this.prog, 'pos');
+        this.tex_coord = gl.getAttribLocation(this.prog, 'tex_coord');
+        this.mvp = gl.getUniformLocation(this.prog, 'mvp');
 
         this.sampler = gl.getUniformLocation(this.prog, 'sampler');
+        this.texture_set = gl.getUniformLocation(this.prog, 'texture_set');
 
+          
+        
         this.vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
-
+        
         this.textureBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.textureBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.texture_c), gl.STATIC_DRAW);
-
+        
         this.texture = gl.createTexture();
+        gl.uniform1i(this.texture_set, false);
+
+        this.normalsBuffer = gl.createBuffer(); 
+    }
+
+    set_texture(img)
+    {
+        gl.useProgram(this.prog);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, this.tex_img);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
+        
         gl.generateMipmap(gl.TEXTURE_2D);
+        
         gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT );
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT );
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR );
-        gl.uniform1i(this.sampler, 0);
-
-        this.normalsBuffer = gl.createBuffer();
-
         
+        gl.uniform1i(this.sampler, 0);
+        gl.uniform1i(this.texture_set, true);
     }
 
-
-    
-
     draw(m_v)
-    {
+    {    
+        gl.useProgram(this.prog);
+        this.num_triangles = this.vertices.length / 3;
+    
+        gl.uniformMatrix4fv(this.mvp, false, m_v);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+        gl.vertexAttribPointer(this.pos, 3, gl.FLOAT, false, 0 ,0);
+		gl.enableVertexAttribArray(this.pos);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.textureBuffer);
+		gl.vertexAttribPointer(this.tex_coord, 2, gl.FLOAT, false, 0 ,0);
+		gl.enableVertexAttribArray(this.tex_coord);
+
+        gl.drawArrays(gl.TRIANGLES, 0, this.num_triangles);
 
     }
 }

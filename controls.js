@@ -45,7 +45,7 @@ function eventHandler(event)
     }
 }
 
-window.onload = function()
+document.addEventListener("DOMContentLoaded", function() 
 {
     InitWebGL();
     
@@ -53,7 +53,7 @@ window.onload = function()
     canvas.addEventListener("mousedown", eventHandler);
     canvas.addEventListener("mouseup", eventHandler);
     canvas.addEventListener("mousemove", eventHandler);
-}
+});
 
 function WindowResize()
 {

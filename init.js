@@ -7,6 +7,7 @@ var camera_position = new vec3(0,0,cam_z)
 var CV, MVP1, MVP2; // view matrices
 var cube, cube_far, quaoar;
 
+
 // Called once to initialize
 function InitWebGL()
 {
@@ -24,12 +25,13 @@ function InitWebGL()
 	
 	// Initialize the programs and buffers for drawing
 	cube = new cube_drawer();
-	quaoar = new quaoar_drawer();
+	quaoar = new planet_drawer("http://0.0.0.0:8000/Quaoar.obj");
+	image_loader("quaoar_texture", quaoar);
 	cube_far = new cube_drawer();
 	
 	// Set the viewport size
 	UpdateCanvasSize();
-	DrawScene();
+	DrawScene()
 }
 
 // Called every time the window size is changed.
@@ -76,9 +78,20 @@ function UpdateViewMatrices()
 	]));
 }
 
+function image_loader(image_id, mesh)
+{
+	console.log(image_id);
+    var img = document.getElementById(image_id);
+
+    img.onload = function() 
+    {
+        mesh.setTexture(img);
+        DrawScene();
+    }
+}
+
 function DrawScene()
 {
-	
 	gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 	gl.clearColor(0.9,0.9,0.9,1);
 	
@@ -93,5 +106,5 @@ function DrawScene()
 	]));
 
 	cube.draw(MVP1);
-	cube_far.draw(MVP2);
+	quaoar.draw(MVP2);
 }
