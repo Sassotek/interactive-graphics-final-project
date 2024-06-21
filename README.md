@@ -19,7 +19,3 @@ Ray Tracing for reflectance and shadow
 starman animation 
 planet animation
 
-
-
-init()---->make constructors in the init program
-function()---->async take resources, when resources are taken pass to objects, objects will then activate draw function

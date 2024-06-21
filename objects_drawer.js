@@ -1,3 +1,5 @@
+var planet_string = obj_loader("http://0.0.0.0:8000/planet.obj");
+
 function program_init(vertex_shader_text , fragment_shader_text)
 {
     virtualS = gl.createShader(gl.VERTEX_SHADER);
@@ -323,7 +325,7 @@ class cube_drawer
 class planet_drawer
 {
 
-    constructor(obj_url)
+    constructor()
     {
         this.vertices = [];
         this.texture_c = [];
@@ -371,8 +373,8 @@ class planet_drawer
         this.prog = program_init(this.VertexShaderText, this.FragmentShaderText);
         gl.useProgram(this.prog);
 
-        this.obj_string = obj_loader(obj_url);
-        this.obj_data = obj_parser(this.obj_string);
+        
+        this.obj_data = obj_parser(planet_string);
         this.vertices = this.obj_data.vertex_buffer;
         this.texture_c = this.obj_data.texture_buffer;
         this.normals = this.obj_data.normal_buffer;
@@ -400,8 +402,43 @@ class planet_drawer
         this.normalsBuffer = gl.createBuffer(); 
     }
 
-    set_texture(img)
+    set_texture(img , texture_unit)
     {
+        switch(texture_unit)
+        {
+            case 0:
+                gl.activeTexture(gl.TEXTURE0);
+                break;
+            
+            case 1:
+                gl.activeTexture(gl.TEXTURE1);
+                break;
+            
+            case 2:
+                gl.activeTexture(gl.TEXTURE2);
+                break;
+            
+            case 3:
+                gl.activeTexture(gl.TEXTURE3);
+                break;
+
+            case 4:
+                gl.activeTexture(gl.TEXTURE4);
+                break;
+                
+            case 5:
+                gl.activeTexture(gl.TEXTURE5);
+                break;
+            
+            case 6:
+                gl.activeTexture(gl.TEXTURE6);
+                break;
+            
+            case 7:
+                gl.activeTexture(gl.TEXTURE7);
+                break;
+        }
+
         gl.useProgram(this.prog);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
@@ -413,7 +450,7 @@ class planet_drawer
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR );
         
-        gl.uniform1i(this.sampler, 0);
+        gl.uniform1i(this.sampler, texture_unit);
         gl.uniform1i(this.texture_set, true);
         console.log("texture_set");
     }
@@ -443,16 +480,175 @@ class skybox_drawer
 {
     constructor()
     {
-        var VertexShaderText = `
+        this.VertexShaderText = `
                 precision mediump float;
 
-               
+                uniform mat4 mvp;
+
+                attribute vec3 pos;
+                attribute vec2 tex_coord;
+
+                varying vec2 v_tex_coord;
+
+                void main()
+                {
+                    gl_Position = mvp*vec4(pos,1);
+                    v_tex_coord = tex_coord;
+                }
             `;
-        var FragmentShaderText = `
+
+        this.FragmentShaderText = `
                 precision mediump float;
 
-                varying vec4 f_clr;
+                uniform sampler2D sampler;
+                uniform bool texture_set;
 
+                varying vec2 v_tex_coord;
+
+                void main()
+                {
+                    if(texture_set)
+                    {
+                    gl_FragColor = texture2D(sampler, v_tex_coord);
+                    }
+
+                    else
+                    {
+                    gl_FragColor = vec4(0,0,0,1);
+                    }
+                }
             `;
+
+        this.prog = program_init(this.VertexShaderText, this.FragmentShaderText);
+        gl.useProgram(this.prog);
+
+        this.vertices = [
+            0.5, 0.5, 0.5,
+            -0.5, 0.5, 0.5,
+            0.5, -0.5, 0.5,
+            -0.5, 0.5, 0.5,
+            0.5, -0.5, 0.5,
+            -0.5, -0.5, 0.5,
+            0.5, 0.5, -0.5,
+            0.5, -0.5, -0.5,
+            -0.5, 0.5, -0.5,
+            0.5, -0.5, -0.5,
+            -0.5, 0.5, -0.5,
+            -0.5, -0.5, -0.5,
+            0.5, 0.5, 0.5,
+            -0.5, 0.5, 0.5,
+            0.5, 0.5, -0.5,
+            -0.5, 0.5, 0.5,
+            0.5, 0.5, -0.5,
+            -0.5, 0.5, -0.5,
+            0.5, -0.5, 0.5,
+            -0.5, -0.5, 0.5,
+            0.5, -0.5, -0.5,
+            -0.5, -0.5, 0.5,
+            0.5, -0.5, -0.5,
+            -0.5, -0.5, -0.5,
+            0.5, 0.5, 0.5,
+            0.5, -0.5, 0.5,
+            0.5, 0.5, -0.5,
+            0.5, -0.5, 0.5,
+            0.5, 0.5, -0.5,
+            0.5, -0.5, -0.5,
+            -0.5, 0.5, 0.5,
+            -0.5, -0.5, 0.5,
+            -0.5, 0.5, -0.5,
+            -0.5, -0.5, 0.5,
+            -0.5, 0.5, -0.5,
+            -0.5, -0.5, -0.5,
+            ];
+        
+        this.pos = gl.getAttribLocation(this.prog, 'pos');
+        this.tex_coord = gl.getAttribLocation(this.prog, 'tex_coord');
+        this.mvp = gl.getUniformLocation(this.prog, 'mvp');
+
+        this.sampler = gl.getUniformLocation(this.prog, 'sampler');
+        this.texture_set = gl.getUniformLocation(this.prog, 'texture_set');
+
+        this.vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+        
+        this.texture = gl.createTexture();
+        gl.uniform1i(this.texture_set, false);
+
     }
+
+    set_texture(img , texture_unit)
+    {
+        switch(texture_unit)
+        {
+            case 0:
+                gl.activeTexture(gl.TEXTURE0);
+                break;
+                
+            case 1:
+                gl.activeTexture(gl.TEXTURE1);
+                break;
+                
+            case 2:
+                gl.activeTexture(gl.TEXTURE2);
+                break;
+                
+            case 3:
+                gl.activeTexture(gl.TEXTURE3);
+                break;
+
+            case 4:
+                gl.activeTexture(gl.TEXTURE4);
+                break;
+                    
+            case 5:
+                gl.activeTexture(gl.TEXTURE5);
+                break;
+                
+            case 6:
+                gl.activeTexture(gl.TEXTURE6);
+                break;
+                
+            case 7:
+                gl.activeTexture(gl.TEXTURE7);
+                break;
+        }
+        
+        const faces = [
+            gl.TEXTURE_CUBE_MAP_POSITIVE_X, gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
+            gl.TEXTURE_CUBE_MAP_POSITIVE_Y, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+            gl.TEXTURE_CUBE_MAP_POSITIVE_Z, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z,
+        ];
+
+        gl.useProgram(this.prog);
+        gl.bindTexture(gl.TEXTURE_2D, this.texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
+            
+        gl.generateMipmap(gl.TEXTURE_2D);
+            
+        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT );
+        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT );
+        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
+        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR );
+            
+        gl.uniform1i(this.sampler, texture_unit);
+        gl.uniform1i(this.texture_set, true);
+        console.log("texture_set");
+    }
+    
+    draw(m_v)
+    {    
+        gl.useProgram(this.prog);
+        this.num_triangles = this.vertices.length / 3;
+        
+        gl.uniformMatrix4fv(this.mvp, false, m_v);
+    
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+        gl.vertexAttribPointer(this.pos, 3, gl.FLOAT, false, 0 ,0);
+        gl.enableVertexAttribArray(this.pos);
+    
+        gl.drawArrays(gl.TRIANGLES, 0, this.num_triangles);
+    
+    }
+
 }

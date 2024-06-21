@@ -1,3 +1,4 @@
+var deg2rad = Math.PI/180;
 
 class vec3 
 {
@@ -139,8 +140,10 @@ function m_mult( A, B )
 	return C;
 }
 
-function trans(scale = 1, dir = vec3(0,0,0), pos = vec3(0,0,0))
+function trans(scale = 1, dir = new vec3(0,0,0), pos = new vec3(0,0,0))
 {
+    //dir.mult(deg2rad);
+
     var r = [
         1.0, 0.0, 0.0, 0.0,
         0.0, 1.0, 0.0, 0.0,
