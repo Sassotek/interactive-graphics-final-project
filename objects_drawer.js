@@ -486,30 +486,29 @@ class skybox_drawer
                 uniform mat4 mvp;
 
                 attribute vec3 pos;
-                attribute vec2 tex_coord;
 
-                varying vec2 v_tex_coord;
+                varying vec3 v_tex_coord;
 
                 void main()
                 {
                     gl_Position = mvp*vec4(pos,1);
-                    v_tex_coord = tex_coord;
+                    v_tex_coord = pos;
                 }
             `;
 
         this.FragmentShaderText = `
                 precision mediump float;
 
-                uniform sampler2D sampler;
+                uniform samplerCube sampler;
                 uniform bool texture_set;
 
-                varying vec2 v_tex_coord;
+                varying vec3 v_tex_coord;
 
                 void main()
                 {
                     if(texture_set)
                     {
-                    gl_FragColor = texture2D(sampler, v_tex_coord);
+                    gl_FragColor = textureCube(sampler, v_tex_coord);
                     }
 
                     else
@@ -522,47 +521,53 @@ class skybox_drawer
         this.prog = program_init(this.VertexShaderText, this.FragmentShaderText);
         gl.useProgram(this.prog);
 
-        this.vertices = [
-            0.5, 0.5, 0.5,
-            -0.5, 0.5, 0.5,
-            0.5, -0.5, 0.5,
-            -0.5, 0.5, 0.5,
-            0.5, -0.5, 0.5,
-            -0.5, -0.5, 0.5,
-            0.5, 0.5, -0.5,
-            0.5, -0.5, -0.5,
-            -0.5, 0.5, -0.5,
-            0.5, -0.5, -0.5,
-            -0.5, 0.5, -0.5,
-            -0.5, -0.5, -0.5,
-            0.5, 0.5, 0.5,
-            -0.5, 0.5, 0.5,
-            0.5, 0.5, -0.5,
-            -0.5, 0.5, 0.5,
-            0.5, 0.5, -0.5,
-            -0.5, 0.5, -0.5,
-            0.5, -0.5, 0.5,
-            -0.5, -0.5, 0.5,
-            0.5, -0.5, -0.5,
-            -0.5, -0.5, 0.5,
-            0.5, -0.5, -0.5,
-            -0.5, -0.5, -0.5,
-            0.5, 0.5, 0.5,
-            0.5, -0.5, 0.5,
-            0.5, 0.5, -0.5,
-            0.5, -0.5, 0.5,
-            0.5, 0.5, -0.5,
-            0.5, -0.5, -0.5,
-            -0.5, 0.5, 0.5,
-            -0.5, -0.5, 0.5,
-            -0.5, 0.5, -0.5,
-            -0.5, -0.5, 0.5,
-            -0.5, 0.5, -0.5,
-            -0.5, -0.5, -0.5,
-            ];
+        this.vertices =   [
+            -0.5, -0.5,  -0.5,
+            -0.5,  0.5,  -0.5,
+             0.5, -0.5,  -0.5,
+            -0.5,  0.5,  -0.5,
+             0.5,  0.5,  -0.5,
+             0.5, -0.5,  -0.5,
         
+            -0.5, -0.5,   0.5,
+             0.5, -0.5,   0.5,
+            -0.5,  0.5,   0.5,
+            -0.5,  0.5,   0.5,
+             0.5, -0.5,   0.5,
+             0.5,  0.5,   0.5,
+        
+            -0.5,   0.5, -0.5,
+            -0.5,   0.5,  0.5,
+             0.5,   0.5, -0.5,
+            -0.5,   0.5,  0.5,
+             0.5,   0.5,  0.5,
+             0.5,   0.5, -0.5,
+        
+            -0.5,  -0.5, -0.5,
+             0.5,  -0.5, -0.5,
+            -0.5,  -0.5,  0.5,
+            -0.5,  -0.5,  0.5,
+             0.5,  -0.5, -0.5,
+             0.5,  -0.5,  0.5,
+        
+            -0.5,  -0.5, -0.5,
+            -0.5,  -0.5,  0.5,
+            -0.5,   0.5, -0.5,
+            -0.5,  -0.5,  0.5,
+            -0.5,   0.5,  0.5,
+            -0.5,   0.5, -0.5,
+        
+             0.5,  -0.5, -0.5,
+             0.5,   0.5, -0.5,
+             0.5,  -0.5,  0.5,
+             0.5,  -0.5,  0.5,
+             0.5,   0.5, -0.5,
+             0.5,   0.5,  0.5,
+        
+            ];
+
+  
         this.pos = gl.getAttribLocation(this.prog, 'pos');
-        this.tex_coord = gl.getAttribLocation(this.prog, 'tex_coord');
         this.mvp = gl.getUniformLocation(this.prog, 'mvp');
 
         this.sampler = gl.getUniformLocation(this.prog, 'sampler');
@@ -574,66 +579,60 @@ class skybox_drawer
         
         this.texture = gl.createTexture();
         gl.uniform1i(this.texture_set, false);
-
-    }
-
-    set_texture(img , texture_unit)
-    {
-        switch(texture_unit)
-        {
-            case 0:
-                gl.activeTexture(gl.TEXTURE0);
-                break;
-                
-            case 1:
-                gl.activeTexture(gl.TEXTURE1);
-                break;
-                
-            case 2:
-                gl.activeTexture(gl.TEXTURE2);
-                break;
-                
-            case 3:
-                gl.activeTexture(gl.TEXTURE3);
-                break;
-
-            case 4:
-                gl.activeTexture(gl.TEXTURE4);
-                break;
-                    
-            case 5:
-                gl.activeTexture(gl.TEXTURE5);
-                break;
-                
-            case 6:
-                gl.activeTexture(gl.TEXTURE6);
-                break;
-                
-            case 7:
-                gl.activeTexture(gl.TEXTURE7);
-                break;
-        }
         
-        const faces = [
-            gl.TEXTURE_CUBE_MAP_POSITIVE_X, gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
-            gl.TEXTURE_CUBE_MAP_POSITIVE_Y, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
-            gl.TEXTURE_CUBE_MAP_POSITIVE_Z, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z,
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.texture);
+    
+        const env_url = 'http://0.0.0.0:8000/sky_texture.png';
+    
+        const faceInfos = [
+            {
+              target: gl.TEXTURE_CUBE_MAP_POSITIVE_X,
+              url: 'http://0.0.0.0:8000/sky_texture.png',
+            },
+            {
+              target: gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
+              url: 'http://0.0.0.0:8000/sky_texture.png',
+            },
+            {
+              target: gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
+              url: 'http://0.0.0.0:8000/sky_texture.png',
+            },
+            {
+              target: gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+              url: 'http://0.0.0.0:8000/sky_texture.png',
+            },
+            {
+              target: gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
+              url: 'http://0.0.0.0:8000/sky_texture.png',
+            },
+            {
+              target: gl.TEXTURE_CUBE_MAP_NEGATIVE_Z,
+              url: 'http://0.0.0.0:8000/sky_texture.png',
+            },
         ];
-
-        gl.useProgram(this.prog);
-        gl.bindTexture(gl.TEXTURE_2D, this.texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
+        
+        faceInfos.forEach((faceInfo) => 
+            {
+            const {target, url} = faceInfo;
+            gl.texImage2D( target, 0, gl.RGBA, 512, 512, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
             
-        gl.generateMipmap(gl.TEXTURE_2D);
-            
-        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT );
-        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT );
-        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
-        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR );
-            
-        gl.uniform1i(this.sampler, texture_unit);
+    
+            var image = new Image();
+            image.src = url;
+            image.crossOrigin = "anonymous";
+            image.addEventListener('load', () => 
+                {
+                gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.texture);
+                gl.texImage2D(target, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+                gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
+                });
+            });
+    
+        gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+        gl.uniform1i(this.sampler, 0);
         gl.uniform1i(this.texture_set, true);
-        console.log("texture_set");
     }
     
     draw(m_v)
@@ -646,9 +645,10 @@ class skybox_drawer
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.vertexAttribPointer(this.pos, 3, gl.FLOAT, false, 0 ,0);
         gl.enableVertexAttribArray(this.pos);
-    
+
         gl.drawArrays(gl.TRIANGLES, 0, this.num_triangles);
     
     }
 
 }
+
