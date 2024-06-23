@@ -143,8 +143,9 @@ function m_mult( A, B )
 function trans(scale = 1, dir = new vec3(0,0,0), pos = new vec3(0,0,0))
 {
     //dir.mult(deg2rad);
+    var r = [];
 
-    var r = [
+    r = [
         1.0, 0.0, 0.0, 0.0,
         0.0, 1.0, 0.0, 0.0,
         0.0, 0.0, 1.0, 0.0,
@@ -215,4 +216,14 @@ function trans(scale = 1, dir = new vec3(0,0,0), pos = new vec3(0,0,0))
 
 	return r;
 }
+
+function normal_transformation_matrix(trans)
+{
+    return n_r = [
+        trans[0],trans[1],trans[2],
+        trans[3],trans[5],trans[6],
+        trans[7],trans[8],trans[9]
+    ]; 
+}
+
 

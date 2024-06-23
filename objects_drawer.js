@@ -55,7 +55,8 @@ function obj_loader(url)
     return result;
 }
 
-function obj_parser(objdata) {
+function obj_parser(objdata) 
+{
     var vpos = [];
     var tpos = [];
     var norm = [];
@@ -329,21 +330,28 @@ class planet_drawer
     {
         this.vertices = [];
         this.texture_c = [];
-        this.normals = [];
+        this.normals_data = [];
 
         this.VertexShaderText = `
                 precision mediump float;
 
                 uniform mat4 mvp;
+                uniform mat4 mv;
+                uniform mat3 ntm;
 
                 attribute vec3 pos;
                 attribute vec2 tex_coord;
+                attribute vec3 normals;
 
                 varying vec2 v_tex_coord;
+                varying vec3 frag_normals;
+                varying vec3 frag_positions;
 
                 void main()
                 {
                     gl_Position = mvp*vec4(pos,1);
+                    frag_positions = vec3(mv*vec4(pos,1));
+                    frag_normals = normalize(ntm*normals);
                     v_tex_coord = tex_coord;
                 }
             `;
@@ -355,17 +363,26 @@ class planet_drawer
                 uniform bool texture_set;
 
                 varying vec2 v_tex_coord;
+                varying vec3 frag_normals;
+                varying vec3 frag_positions;
 
                 void main()
                 {
+                    vec3 amb_light_intesity = vec3(0.4, 0.4, 0.2);
+                    vec3 main_light_intensity = vec3(0.9 , 0.9, 0.9);
+                    vec3 light_direction = normalize(vec3(1.0, 4.0, 0.0));
+                    
                     if(texture_set)
                     {
-                    gl_FragColor = texture2D(sampler, v_tex_coord);
+                        vec3 light_intensity = amb_light_intesity + main_light_intensity*max(dot(frag_normals, light_direction), 0.0);
+                        //gl_FragColor = vec4(frag_normals, 1.0);
+                        gl_FragColor = texture2D(sampler, v_tex_coord)* vec4(light_intensity,1);
                     }
 
                     else
                     {
-                    gl_FragColor = vec4(1,0.1,0.5,1);
+                        gl_FragColor = vec4(frag_normals, 1.0);
+                        //gl_FragColor = intensity*(lamb*vec4(1,0.1,0.5,1)+pow(specular, alpha)*vec4(1,1,1,1));
                     }
                 }
             `;
@@ -377,17 +394,18 @@ class planet_drawer
         this.obj_data = obj_parser(planet_string);
         this.vertices = this.obj_data.vertex_buffer;
         this.texture_c = this.obj_data.texture_buffer;
-        this.normals = this.obj_data.normal_buffer;
+        this.normals_data = this.obj_data.normal_buffer;
 
         this.pos = gl.getAttribLocation(this.prog, 'pos');
         this.tex_coord = gl.getAttribLocation(this.prog, 'tex_coord');
+        this.normals = gl.getAttribLocation(this.prog, 'normals');
         this.mvp = gl.getUniformLocation(this.prog, 'mvp');
+        this.mv = gl.getUniformLocation(this.prog, 'mv');
+        this.ntm = gl.getUniformLocation(this.prog, 'ntm');
 
         this.sampler = gl.getUniformLocation(this.prog, 'sampler');
         this.texture_set = gl.getUniformLocation(this.prog, 'texture_set');
 
-          
-        
         this.vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
@@ -400,45 +418,13 @@ class planet_drawer
         gl.uniform1i(this.texture_set, false);
 
         this.normalsBuffer = gl.createBuffer(); 
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.normalsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normals_data), gl.STATIC_DRAW);
     }
 
     set_texture(img , texture_unit)
     {
-        switch(texture_unit)
-        {
-            case 0:
-                gl.activeTexture(gl.TEXTURE0);
-                break;
-            
-            case 1:
-                gl.activeTexture(gl.TEXTURE1);
-                break;
-            
-            case 2:
-                gl.activeTexture(gl.TEXTURE2);
-                break;
-            
-            case 3:
-                gl.activeTexture(gl.TEXTURE3);
-                break;
-
-            case 4:
-                gl.activeTexture(gl.TEXTURE4);
-                break;
-                
-            case 5:
-                gl.activeTexture(gl.TEXTURE5);
-                break;
-            
-            case 6:
-                gl.activeTexture(gl.TEXTURE6);
-                break;
-            
-            case 7:
-                gl.activeTexture(gl.TEXTURE7);
-                break;
-        }
-
+        gl.activeTexture(gl.TEXTURE0 + texture_unit);
         gl.useProgram(this.prog);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
@@ -455,20 +441,26 @@ class planet_drawer
         console.log("texture_set");
     }
 
-    draw(m_v)
+    draw(m_p, m_w, n_w)
     {    
         gl.useProgram(this.prog);
         this.num_triangles = this.vertices.length / 3;
     
-        gl.uniformMatrix4fv(this.mvp, false, m_v);
+        gl.uniformMatrix4fv(this.mvp, false, m_p);
+        gl.uniformMatrix4fv(this.mv, false, m_w);
+        gl.uniformMatrix3fv(this.ntm, false, n_w);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-        gl.vertexAttribPointer(this.pos, 3, gl.FLOAT, false, 0 ,0);
+        gl.vertexAttribPointer(this.pos, 3, gl.FLOAT, gl.FALSE, 0 ,0);
 		gl.enableVertexAttribArray(this.pos);
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.textureBuffer);
-		gl.vertexAttribPointer(this.tex_coord, 2, gl.FLOAT, false, 0 ,0);
+		gl.vertexAttribPointer(this.tex_coord, 2, gl.FLOAT, gl.FALSE, 0 ,0);
 		gl.enableVertexAttribArray(this.tex_coord);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.normalsBuffer);
+        gl.vertexAttribPointer(this.normals, 3 ,gl.FLOAT, gl.FALSE, 0, 0);
+        gl.enableVertexAttribArray(this.normals);
 
         gl.drawArrays(gl.TRIANGLES, 0, this.num_triangles);
 

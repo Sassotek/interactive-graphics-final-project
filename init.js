@@ -3,7 +3,7 @@ var camera_angle = new vec3(45,45,0);
 camera_angle.mult(deg2rad);
 var cam_z = 5;
 var camera_position = new vec3(0,0,-cam_z)
-var CV, MVP1, MVP_quaoar, MVP_kamillis; // view matrices
+var CV, MVP1,MW_quaoar, MV_quaoar, MW_kamillis, MV_kamillis; // view matrices
 var cube, cube_far, skybox, quaoar, kamillis, pyrona;
 
 var quaoar_pos = new vec3(2,2,-2);
@@ -104,13 +104,16 @@ function DrawScene()
 	gl.clearColor(0.9,0.9,0.9,1);
 	
 	var perspectiveMatrix = ProjectionMatrix();
-	CV  = trans(1, camera_angle, camera_position );
+	CV  = trans(1, camera_angle, camera_position);
 	MVP1 = m_mult(perspectiveMatrix, CV);
-	MVP_quaoar = m_mult(perspectiveMatrix, m_mult(CV, trans(0.5 ,new vec3(0,0,0), quaoar_pos)));
-	MVP_kamillis = m_mult(perspectiveMatrix, m_mult(CV, trans(0.5 ,new vec3(0,0,0), kamillis_pos)));
+	MW_quaoar =  trans(0.5 ,new vec3(0,0,0), quaoar_pos);
+	MV_quaoar = m_mult(CV, MW_quaoar);
+	MW_kamillis = trans(0.5 ,new vec3(0,0,0), kamillis_pos);
+	MV_kamillis = m_mult(CV, MW_kamillis);
+	
 	
 	cube.draw(MVP1);
 	skybox.draw(m_mult(perspectiveMatrix, m_mult(CV, trans(20))));
-	quaoar.draw(MVP_quaoar);
-	kamillis.draw(MVP_kamillis);
+	quaoar.draw(m_mult(perspectiveMatrix, MV_quaoar), MW_quaoar, normal_transformation_matrix(MW_quaoar));
+	kamillis.draw(m_mult(perspectiveMatrix, MV_kamillis), MW_kamillis, normal_transformation_matrix(MW_kamillis));
 }
