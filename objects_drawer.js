@@ -360,23 +360,48 @@ class planet_drawer
                 precision mediump float;
 
                 uniform sampler2D sampler;
+                uniform sampler2D shadows_sampler;
                 uniform bool texture_set;
+                uniform vec3 light;
+                uniform bool light_set;
 
                 varying vec2 v_tex_coord;
                 varying vec3 frag_normals;
                 varying vec3 frag_positions;
+                varying vec4 frag_light_pos;
 
                 void main()
                 {
-                    vec3 amb_light_intesity = vec3(0.4, 0.4, 0.2);
-                    vec3 main_light_intensity = vec3(0.9 , 0.9, 0.9);
-                    vec3 light_direction = normalize(vec3(1.0, 4.0, 0.0));
+                    float alpha = 10000.0;
+                    float intensity = 1.0;
+                    float increment = 2.0;
+                    float K_diffuse;
+                    float K_specular;
+
+                    if(light_set)
+                    {
+                        vec3 omega = normalize(light);
+                        vec3 n = normalize(frag_normals);
+                        vec3 v = -normalize(frag_positions);
+                        vec3 h = normalize(omega+v);  
+                        float specular = max(dot(h,n), 0.0);
+
+                        K_diffuse = min(increment*max(dot(omega,n), 0.0), 1.0);
+                        K_specular = pow(specular, alpha);
+                    }
                     
                     if(texture_set)
                     {
-                        vec3 light_intensity = amb_light_intesity + main_light_intensity*max(dot(frag_normals, light_direction), 0.0);
-                        //gl_FragColor = vec4(frag_normals, 1.0);
-                        gl_FragColor = texture2D(sampler, v_tex_coord)* vec4(light_intensity,1);
+                        if(light_set)
+                        {
+                            vec4 tex_color = texture2D(sampler, v_tex_coord);
+                            vec3 color = intensity*(K_diffuse*tex_color.rgb + K_specular*vec3(1.0, 1.0, 1.0)); 
+                            gl_FragColor = vec4(color, 1.0);
+                        }
+                        else
+                        {
+                            gl_FragColor = texture2D(sampler, v_tex_coord);
+                        }
                     }
 
                     else
@@ -402,9 +427,14 @@ class planet_drawer
         this.mvp = gl.getUniformLocation(this.prog, 'mvp');
         this.mv = gl.getUniformLocation(this.prog, 'mv');
         this.ntm = gl.getUniformLocation(this.prog, 'ntm');
+        this.lvp = gl.getUniformLocation(this.prog, 'lvp');
+        this.shadows_set = gl.getUniformLocation(this.prog, 'shadows_set');
+        this.f_shadows_set = gl.getUniformLocation(this.prog, 'f_shadows_set');
 
         this.sampler = gl.getUniformLocation(this.prog, 'sampler');
         this.texture_set = gl.getUniformLocation(this.prog, 'texture_set');
+        this.light = gl.getUniformLocation(this.prog, 'light');
+        this.light_set = gl.getUniformLocation(this.prog, 'light_set');
 
         this.vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -420,6 +450,10 @@ class planet_drawer
         this.normalsBuffer = gl.createBuffer(); 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.normalsBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normals_data), gl.STATIC_DRAW);
+
+        gl.uniform1i(this.light_set, false);
+        gl.uniform1i(this.shadows_set, false);
+        gl.uniform1i(this.f_shadows_set, false);
     }
 
     set_texture(img , texture_unit)
@@ -439,6 +473,21 @@ class planet_drawer
         gl.uniform1i(this.sampler, texture_unit);
         gl.uniform1i(this.texture_set, true);
         console.log("texture_set");
+    }
+
+
+    set_light(vec)
+    {
+        gl.useProgram(this.prog);
+        gl.uniform3f(this.light, vec.x, vec.y, vec.z);
+        gl.uniform1i(this.light_set, true);
+    }
+
+    set_shadow_map(light_mvp, m_w)
+    {
+        gl.uniformMatrix4fv(this.lvp, false, m_mult(light_mvp, m_w));
+        gl.uniform1i(this.shadows_set, true);
+        gl.uniform1i(this.f_shadows_set, true);
     }
 
     draw(m_p, m_w, n_w)

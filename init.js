@@ -3,14 +3,18 @@ var camera_angle = new vec3(45,45,0);
 camera_angle.mult(deg2rad);
 var cam_z = 5;
 var camera_position = new vec3(0,0,-cam_z)
-var CV, MVP1,MW_quaoar, MV_quaoar, MW_kamillis, MV_kamillis; // view matrices
-var cube, cube_far, skybox, quaoar, kamillis, pyrona;
+var CV, MVP1, MW_quaoar, MV_quaoar, MW_kamillis, MV_kamillis, MW_pyrona, MV_pyrona, MW_hagaton, MV_hagaton, MW_ophin, MV_ophin, MW_hal, MV_hal; // view matrices
+var cube, skybox, quaoar, kamillis, pyrona, hagaton, ophin, hal;
 
-var quaoar_pos = new vec3(2,2,-2);
-var kamillis_pos = new vec3(2,2,2);
-var pyrona_pos = new vec3(-3,0,2);
+var axys = 6;
+var quaoar_pos = new vec3(-15,10, 40);
+var kamillis_pos = new vec3(-40,-25,-40);
+var pyrona_pos = new vec3(30,-axys,0);
+var hagaton_pos = new vec3(25,30,-35);
+var ophin_pos = new vec3(0,-axys,0);
+var hal_pos = new vec3(45,-axys,0);
 
-// Called once to initialize
+
 function InitWebGL()
 {
 	// Initialize the WebGL canvas
@@ -28,13 +32,23 @@ function InitWebGL()
 	// Initialize the programs and buffers for drawing
 	cube = new cube_drawer();
 	skybox = new skybox_drawer();
+
 	quaoar = new planet_drawer();
 	kamillis = new planet_drawer();
+	pyrona = new planet_drawer();
+	hagaton = new planet_drawer();
+	ophin = new planet_drawer();
+	hal = new planet_drawer();
+
 	image_loader("http://0.0.0.0:8000/quaoar_texture.png", quaoar, 1);
 	image_loader("http://0.0.0.0:8000/kamillis_texture.png", kamillis, 2);
-	cube_far = new cube_drawer();
+	image_loader("http://0.0.0.0:8000/pyrona_texture.png", pyrona, 3);
+	image_loader("http://0.0.0.0:8000/hagaton_texture.png", hagaton, 4);
+	image_loader("http://0.0.0.0:8000/ophin_texture.png", ophin, 5);
+	image_loader("http://0.0.0.0:8000/hal_texture.png", hal, 6);
 	
-	// Set the viewport size
+	
+	
 	UpdateCanvasSize();
 	DrawScene()
 }
@@ -75,13 +89,15 @@ function UpdateViewMatrices()
 {
 	var perspectiveMatrix = ProjectionMatrix();
 	CV  = trans(1, camera_angle, camera_position );
-	MVP1 = m_mult(perspectiveMatrix, CV);
+	light_mvp = m_mult(perspectiveMatrix, trans(1.0, pyrona_pos)); 
+	
+	/*MVP1 = m_mult(perspectiveMatrix, CV);
 	MVP2 = m_mult(perspectiveMatrix, m_mult(CV, [
 		1,0,0,0,
 		0,1,0,0,
 		0,0,1,0,
 		2,0,0,1
-	]));
+	]));*/
 }
 
 function image_loader(image_id, mesh, texture_unit)
@@ -98,6 +114,28 @@ function image_loader(image_id, mesh, texture_unit)
 	 	
 }
 
+function shadowMap_init()
+{
+	depth_program = program_init(depth_vs, depth_fs);
+
+	gl.useProgram(depth_program)
+	depth_texture = gl.createTexture();
+	gl.bindTexture(gl.TEXTURE_2D, depth_texture);
+	gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, depth_texture_size, depth_texture_size, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+	depth_frame_buffer = gl.createFramebuffer();
+	gl.bindFramebuffer(gl.FRAMEBUFFER, depth_frame_buffer);
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture, 0);
+}
+
+function shadowMap_draw()
+{
+	//pass ligth_mvp
+}
+
 function DrawScene()
 {
 	gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
@@ -106,14 +144,38 @@ function DrawScene()
 	var perspectiveMatrix = ProjectionMatrix();
 	CV  = trans(1, camera_angle, camera_position);
 	MVP1 = m_mult(perspectiveMatrix, CV);
-	MW_quaoar =  trans(0.5 ,new vec3(0,0,0), quaoar_pos);
+
+	MW_quaoar =  trans(2 ,new vec3(0,0,0), quaoar_pos);
 	MV_quaoar = m_mult(CV, MW_quaoar);
-	MW_kamillis = trans(0.5 ,new vec3(0,0,0), kamillis_pos);
+	
+	MW_kamillis = trans(2 ,new vec3(0,0,0), kamillis_pos);
 	MV_kamillis = m_mult(CV, MW_kamillis);
+
+	MW_pyrona = trans(5 ,new vec3(0,0,0), pyrona_pos);
+	MV_pyrona = m_mult(CV, MW_pyrona);
+
+	MW_hagaton = trans(2.5 ,new vec3(0,0,0), hagaton_pos);
+	MV_hagaton = m_mult(CV, MW_hagaton);
+
+	MW_ophin = trans(5 ,new vec3(0,0,0), ophin_pos);
+	MV_ophin = m_mult(CV, MW_ophin);
+
+	MW_hal = trans(5, new vec3(0,0,0), hal_pos);
+	MV_hal = m_mult(CV, MW_hal);
 	
 	
-	cube.draw(MVP1);
-	skybox.draw(m_mult(perspectiveMatrix, m_mult(CV, trans(20))));
+	quaoar.set_light(calculate_dir(pyrona_pos, quaoar_pos));
+	kamillis.set_light(calculate_dir(pyrona_pos, kamillis_pos));
+	hagaton.set_light(calculate_dir(pyrona_pos, hagaton_pos));
+	ophin.set_light(calculate_dir(pyrona_pos, ophin_pos));
+	hal.set_light(calculate_dir(pyrona_pos, hal_pos));
+
+	//cube.draw(MVP1);
+	skybox.draw(m_mult(perspectiveMatrix, m_mult(CV, trans(100))));
 	quaoar.draw(m_mult(perspectiveMatrix, MV_quaoar), MW_quaoar, normal_transformation_matrix(MW_quaoar));
 	kamillis.draw(m_mult(perspectiveMatrix, MV_kamillis), MW_kamillis, normal_transformation_matrix(MW_kamillis));
+	pyrona.draw(m_mult(perspectiveMatrix, MV_pyrona), MW_pyrona, normal_transformation_matrix(MW_pyrona));
+	hagaton.draw(m_mult(perspectiveMatrix, MV_hagaton), MW_hagaton, normal_transformation_matrix(MW_hagaton));
+	ophin.draw(m_mult(perspectiveMatrix, MV_ophin), MW_ophin, normal_transformation_matrix(MW_ophin));
+	hal.draw(m_mult(perspectiveMatrix, MV_hal), MW_hal, normal_transformation_matrix(MW_hal));
 }

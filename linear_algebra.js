@@ -226,4 +226,8 @@ function normal_transformation_matrix(trans)
     ]; 
 }
 
+function calculate_dir(from, to)
+{
+    return new vec3(from.x-to.x, from.y-to.y, from.z-to.z);
+}
 
