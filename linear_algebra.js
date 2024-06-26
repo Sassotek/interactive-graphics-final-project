@@ -44,95 +44,42 @@ class vec3
         this.z *= scalar;
     }
 
+    m_prod(matrix)
+    {
+        var temp_x = this.x*matrix[0] + this.y*matrix[1] + this.z*matrix[2];
+        var temp_y = this.x*matrix[3] + this.y*matrix[4] + this.z*matrix[5];
+        var temp_z = this.x*matrix[6] + this.y*matrix[7] + this.z*matrix[8];
+
+        this.x = temp_x;
+        this.y = temp_y;
+        this.z = temp_z;
+    }
+
     setX(x){this.x = x;}
     setY(y){this.y = y;}
     setZ(z){this.z = z;}
 }
 
 
-/*function m_mult( A, B )
-{
-	var C = [];
-	for ( var i=0; i<4; ++i ) {
-		for ( var j=0; j<4; ++j ) {
-			var v = 0;
-			for ( var k=0; k<4; ++k ) {
-				v += A[i*4+k] * B[j+k*4];
-			}
-			C.push(v);
-		}
-	}
-	return C;
-}
-
-function trans(scale = 1, dir = vec3(0,0,0), pos = vec3(0,0,0)) //first scale, second rotation, then translation
-{
-    var t = [1,0,0,0,
-            0,1,0,0,
-            0,0,1,0,
-            0,0,0,1];
-    
-    if(dir.z != 0)
-        {
-            const Rz = [Math.cos(dir.z), -Math.sin(dir.z) , 0, 0,
-                        Math.sin(dir.z), Math.cos(dir.z), 0 ,0,
-                        0, 0, 1, 0,
-                        0, 0, 0, 1];
-            
-            t = m_mult(Rz,t);
-
-        }
-
-    if(dir.y != 0)
-        {
-            const Ry = [Math.cos(dir.y), 0, Math.sin(dir.y), 0,
-                        0, 1, 0, 0,
-                        -Math.sin(dir.y), 0, Math.cos(dir.y), 0,
-                        0, 0, 0, 1];
-            
-            t = m_mult(Ry,t);
-        }
-
-    if(dir.x != 0)
-        {
-            const Rx = [1, 0, 0, 0,
-                        0, Math.cos(dir.x), -Math.sin(dir.x), 0,
-                        0, Math.sin(dir.x), Math.cos(dir.x), 0,
-                        0, 0, 0, 1];
-            
-            t = m_mult(Rx,t);
-        }
-
-    if(scale !=1)
-        {
-            const S = [scale,0,0,0,
-                      0,scale,0,0,
-                      0,0,scale,0,
-                      0,0,0,1];
-            
-            t = m_mult(S,t);
-        }
-    
-    const transf = [1,0,0, pos.x,
-                    0,1,0,pos.y,
-                    0,0,1,pos.z,
-                    0,0,0,1,];
-    
-    t = m_mult(transf,t);
-
-    return t;
-}*/
-
-//////////////////column major version/////////////////
 
 function m_mult( A, B )
 {
+    var len;
+
+    if(A.length == 16 && B.length == 16) len = 4;
+    else if(A.length == 9 && B.length == 9) len = 3;
+    else
+    { 
+        console.log("different or invalid matrix sizes");
+        return 0;
+    }
+
 	var C = [];
-	for ( var i=0; i<4; ++i ) {
-		for ( var j=0; j<4; ++j ) {
+	for ( var i=0; i<len; ++i ) {
+		for ( var j=0; j<len; ++j ) {
 			var v = 0;
-			for ( var k=0; k<4; ++k ) {
-				v += A[j+4*k] * B[k+4*i];
+			for ( var k=0; k<len; ++k ) {
+				v += A[j+len*k] * B[k+len*i];
 			}
 			C.push(v);
 		}
@@ -221,13 +168,57 @@ function normal_transformation_matrix(trans)
 {
     return n_r = [
         trans[0],trans[1],trans[2],
-        trans[3],trans[5],trans[6],
-        trans[7],trans[8],trans[9]
+        trans[4],trans[5],trans[6],
+        trans[8],trans[9],trans[10]
     ]; 
 }
 
-function calculate_dir(from, to)
+function calculate_dir(from, to, rotation = new vec3(0,0,0))
 {
-    return new vec3(from.x-to.x, from.y-to.y, from.z-to.z);
+    var result = new vec3(from.x-to.x, from.y-to.y, from.z-to.z);
+    
+    R = [
+        1.0, 0.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 0.0, 1.0
+    ];
+
+    if(rotation.x != 0)
+        {
+            var Rx = [
+                1.0,        0.0,            0.0,
+                0.0, Math.cos(rotation.x), Math.sin(rotation.x),
+                0.0, -Math.sin(rotation.x), Math.cos(rotation.x) 
+            ];
+            
+            R = m_mult(R,Rx);
+        }
+
+    if(rotation.y != 0)
+        {
+	        var Ry = [
+                Math.cos(rotation.y), 0.0 , -Math.sin(rotation.y),
+		            0.0,         1.0,        0.0,
+			    Math.sin(rotation.y), 0.0, Math.cos(rotation.y)
+            ];
+        
+            R = m_mult(R, Ry);
+        }
+	
+	 if(rotation.z != 0)
+        {
+            
+            const Rz = [
+                Math.cos(rotation.z), Math.sin(rotation.z) , 0.0,
+                -Math.sin(rotation.z),Math.cos(rotation.z), 0.0,
+                    0.0,            0.0,          1.0
+            ];
+
+            R = m_mult(R, Rz);
+        }
+    
+    result.m_prod(R);
+    
+    return result;
 }
 

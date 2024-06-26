@@ -1,6 +1,6 @@
 # Blender 4.1.1
 # www.blender.org
-mtllib space_man.mtl
+mtllib space_man .mtl
 o Cube
 v 0.769129 1.155890 -0.251838
 v 0.574182 0.235525 -0.188383

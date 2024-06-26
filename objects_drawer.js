@@ -1,4 +1,6 @@
 var planet_string = obj_loader("http://0.0.0.0:8000/planet.obj");
+var spaceman_string = obj_loader("http://0.0.0.0:8000/space_man.obj");
+
 
 function program_init(vertex_shader_text , fragment_shader_text)
 {
@@ -131,7 +133,7 @@ function obj_parser(objdata)
 
     function addVertToBuffer2(buffer, v, f, i) {
         buffer.push(v[f[i]][0]);
-        buffer.push(v[f[i]][1]);
+        buffer.push(1 - v[f[i]][1]); //invert y-axis becouse of blender uv system
     }
 
     var vBuffer = [];
@@ -322,6 +324,189 @@ class cube_drawer
 }
 
 
+class spaceman_drawer
+{
+    constructor()
+    {
+        this.vertices = [];
+        this.texture_c = [];
+        this.normals_data = [];
+
+        this.VertexShaderText = `
+                precision mediump float;
+
+                uniform mat4 mvp;
+                uniform mat4 mv;
+                uniform mat3 ntm;
+
+                attribute vec3 pos;
+                attribute vec2 tex_coord;
+                attribute vec3 normals;
+
+                varying vec2 v_tex_coord;
+                varying vec3 frag_normals;
+                varying vec3 frag_positions;
+
+                void main()
+                {
+                    gl_Position = mvp*vec4(pos,1);
+                    frag_positions = vec3(mv*vec4(pos,1));
+                    frag_normals = normalize(ntm*normals);
+                    v_tex_coord = tex_coord;
+                }
+            `;
+
+        this.FragmentShaderText = `
+                precision mediump float;
+
+                uniform sampler2D sampler;
+                uniform sampler2D shadows_sampler;
+                uniform bool texture_set;
+                uniform vec3 light;
+                uniform float alpha;
+                uniform bool light_set;
+
+                varying vec2 v_tex_coord;
+                varying vec3 frag_normals;
+                varying vec3 frag_positions;
+                varying vec4 frag_light_pos;
+
+                void main()
+                {
+                    float intensity = 1.0;
+                    float increment = 2.0;
+                    float K_diffuse;
+                    float K_specular;
+
+                    if(light_set)
+                    {
+                        vec3 omega = normalize(light);
+                        vec3 n = normalize(frag_normals);
+                        vec3 v = -normalize(frag_positions);
+                        vec3 h = normalize(omega+v);  
+                        float specular = max(dot(h,n), 0.0);
+
+                        K_diffuse = min(increment*max(dot(omega,n), 0.0), 1.0);
+                        K_specular = pow(specular, alpha);
+                    }
+                    
+                    if(texture_set)
+                    {
+                        if(light_set)
+                        {
+                            vec4 tex_color = texture2D(sampler, v_tex_coord);
+                            vec3 color = intensity*(K_diffuse*tex_color.rgb + K_specular*vec3(1.0, 1.0, 1.0)); 
+                            gl_FragColor = vec4(color, 1.0);
+                        }
+                        else
+                        {
+                            gl_FragColor = texture2D(sampler, v_tex_coord);
+                        }
+                    }
+
+                    else
+                    {
+                        gl_FragColor = vec4(frag_normals, 1.0);
+                        //gl_FragColor = intensity*(lamb*vec4(1,0.1,0.5,1)+pow(specular, alpha)*vec4(1,1,1,1));
+                    }
+                }
+            `;
+        
+        this.prog = program_init(this.VertexShaderText, this.FragmentShaderText);
+        gl.useProgram(this.prog);
+
+        
+        this.obj_data = obj_parser(spaceman_string);
+        this.vertices = this.obj_data.vertex_buffer;
+        this.texture_c = this.obj_data.texture_buffer;
+        this.normals_data = this.obj_data.normal_buffer;
+
+        this.pos = gl.getAttribLocation(this.prog, 'pos');
+        this.tex_coord = gl.getAttribLocation(this.prog, 'tex_coord');
+        this.normals = gl.getAttribLocation(this.prog, 'normals');
+        this.mvp = gl.getUniformLocation(this.prog, 'mvp');
+        this.mv = gl.getUniformLocation(this.prog, 'mv');
+        this.ntm = gl.getUniformLocation(this.prog, 'ntm');
+        
+        this.sampler = gl.getUniformLocation(this.prog, 'sampler');
+        this.texture_set = gl.getUniformLocation(this.prog, 'texture_set');
+        this.light = gl.getUniformLocation(this.prog, 'light');
+        this.alpha = gl.getUniformLocation(this.prog, 'alpha');
+        this.light_set = gl.getUniformLocation(this.prog, 'light_set');
+
+        this.vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+        
+        this.textureBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.textureBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.texture_c), gl.STATIC_DRAW);
+        
+        this.texture = gl.createTexture();
+        gl.uniform1i(this.texture_set, false);
+
+        this.normalsBuffer = gl.createBuffer(); 
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.normalsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normals_data), gl.STATIC_DRAW);
+
+        gl.uniform1i(this.light_set, false);
+        
+    }
+    
+    set_texture(img , texture_unit)
+    {
+        gl.activeTexture(gl.TEXTURE0 + texture_unit);
+        gl.useProgram(this.prog);
+        gl.bindTexture(gl.TEXTURE_2D, this.texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
+        
+        gl.generateMipmap(gl.TEXTURE_2D);
+        
+        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT );
+		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT );
+		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
+		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR );
+        
+        gl.uniform1i(this.sampler, texture_unit);
+        gl.uniform1i(this.texture_set, true);
+        console.log("texture_set");
+    }
+
+
+    set_light(vec, a)
+    {
+        gl.useProgram(this.prog);
+        gl.uniform3f(this.light, vec.x, vec.y, vec.z);
+        gl.uniform1f(this.alpha, a);
+        gl.uniform1i(this.light_set, true);
+    }
+
+    draw(m_p, m_w, n_w)
+    {    
+        gl.useProgram(this.prog);
+        this.num_triangles = this.vertices.length / 3;
+    
+        gl.uniformMatrix4fv(this.mvp, false, m_p);
+        gl.uniformMatrix4fv(this.mv, false, m_w);
+        gl.uniformMatrix3fv(this.ntm, false, n_w);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+        gl.vertexAttribPointer(this.pos, 3, gl.FLOAT, gl.FALSE, 0 ,0);
+		gl.enableVertexAttribArray(this.pos);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.textureBuffer);
+		gl.vertexAttribPointer(this.tex_coord, 2, gl.FLOAT, gl.FALSE, 0 ,0);
+		gl.enableVertexAttribArray(this.tex_coord);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.normalsBuffer);
+        gl.vertexAttribPointer(this.normals, 3 ,gl.FLOAT, gl.FALSE, 0, 0);
+        gl.enableVertexAttribArray(this.normals);
+
+        gl.drawArrays(gl.TRIANGLES, 0, this.num_triangles);
+
+    }
+}
+
 
 class planet_drawer
 {
@@ -363,6 +548,7 @@ class planet_drawer
                 uniform sampler2D shadows_sampler;
                 uniform bool texture_set;
                 uniform vec3 light;
+                uniform float alpha;
                 uniform bool light_set;
 
                 varying vec2 v_tex_coord;
@@ -372,7 +558,6 @@ class planet_drawer
 
                 void main()
                 {
-                    float alpha = 10000.0;
                     float intensity = 1.0;
                     float increment = 2.0;
                     float K_diffuse;
@@ -427,13 +612,11 @@ class planet_drawer
         this.mvp = gl.getUniformLocation(this.prog, 'mvp');
         this.mv = gl.getUniformLocation(this.prog, 'mv');
         this.ntm = gl.getUniformLocation(this.prog, 'ntm');
-        this.lvp = gl.getUniformLocation(this.prog, 'lvp');
-        this.shadows_set = gl.getUniformLocation(this.prog, 'shadows_set');
-        this.f_shadows_set = gl.getUniformLocation(this.prog, 'f_shadows_set');
 
         this.sampler = gl.getUniformLocation(this.prog, 'sampler');
         this.texture_set = gl.getUniformLocation(this.prog, 'texture_set');
         this.light = gl.getUniformLocation(this.prog, 'light');
+        this.alpha = gl.getUniformLocation(this.prog, 'alpha');
         this.light_set = gl.getUniformLocation(this.prog, 'light_set');
 
         this.vertexBuffer = gl.createBuffer();
@@ -454,6 +637,8 @@ class planet_drawer
         gl.uniform1i(this.light_set, false);
         gl.uniform1i(this.shadows_set, false);
         gl.uniform1i(this.f_shadows_set, false);
+
+
     }
 
     set_texture(img , texture_unit)
@@ -476,10 +661,11 @@ class planet_drawer
     }
 
 
-    set_light(vec)
+    set_light(vec, a)
     {
         gl.useProgram(this.prog);
         gl.uniform3f(this.light, vec.x, vec.y, vec.z);
+        gl.uniform1f(this.alpha, a);
         gl.uniform1i(this.light_set, true);
     }
 

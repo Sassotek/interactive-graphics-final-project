@@ -2,7 +2,6 @@ shadow_vs = `
     uniform ma4 mvp;
 
     attribute vec3 pos;
-
     varying vec3 f_pos;
 
     void main()
@@ -12,4 +11,5 @@ shadow_vs = `
 `;
 
 shadow_fs = `
+    
 `;

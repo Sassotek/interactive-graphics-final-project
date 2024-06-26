@@ -11,11 +11,10 @@ roadmap:
 
 make a functional scene render---->done
 camera movement---->done
-skybox
-starman
-planets
-lighting
-Ray Tracing for reflectance and shadow 
-starman animation 
-planet animation
+skybox ----> done
+starman ----> adjust texture placement ---->
+planets ----> add more polygonal sphere mesh ---->
+lighting ----> done
+Shadow mapping ----> 
+planet animation ---->
 
