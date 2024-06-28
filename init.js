@@ -50,8 +50,6 @@ function InitWebGL()
 	image_loader("http://0.0.0.0:8000/hal_texture.png", hal, 6);
 	image_loader("http://0.0.0.0:8000/spaceman_texture.png", spaceman, 7);
 	
-	
-	
 	UpdateCanvasSize();
 	DrawScene()
 }

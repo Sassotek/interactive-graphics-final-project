@@ -13,7 +13,7 @@ make a functional scene render---->done
 camera movement---->done
 skybox ----> done
 starman ----> adjust texture placement ---->
-planets ----> add more polygonal sphere mesh ---->
+planets ----> add more polygonal sphere mesh ----> done
 lighting ----> done
 Shadow mapping ----> 
 planet animation ---->
