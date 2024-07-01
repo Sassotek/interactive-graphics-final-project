@@ -15,17 +15,30 @@ var ophin_pos = new vec3(0,-axys,0);
 var hal_pos = new vec3(45,-axys,0);
 var spaceman_pos = new vec3(0, 0, 0);
 
-
-function InitWebGL()
+function initWebGL()
 {
+	gl = canvas.getContext("webgl", {antialias: false, depth: true});	// Initialize the GL context
+	if (!gl) 
+        {
+		    alert("Unable to initialize WebGL. Your browser or machine may not support it.");
+		    return;
+	    }
+    /*const ext = gl.getExtension('WEBGL_depth_texture');
+    if (!ext) 
+        {
+            console.error('WEBGL_depth_texture extension is not supported.');
+        }*/
+}
+
+function Init()
+{
+
 	// Initialize the WebGL canvas
 	canvas = document.getElementById("scene");
-	gl = canvas.getContext("webgl", {antialias: false, depth: true});	// Initialize the GL context
-	if (!gl) {
-		alert("Unable to initialize WebGL. Your browser or machine may not support it.");
-		return;
-	}
 	
+	initWebGL();
+	
+	ShadowMapInit();
 	// Initialize settings
 	gl.clearColor(0.9,0.9,0.9,1);
 	gl.enable(gl.DEPTH_TEST);
@@ -115,27 +128,6 @@ function image_loader(image_id, mesh, texture_unit)
 	 	
 }
 
-function shadowMap_init()
-{
-	depth_program = program_init(depth_vs, depth_fs);
-
-	gl.useProgram(depth_program)
-	depth_texture = gl.createTexture();
-	gl.bindTexture(gl.TEXTURE_2D, depth_texture);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, depth_texture_size, depth_texture_size, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-	depth_frame_buffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, depth_frame_buffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture, 0);
-}
-
-function shadowMap_draw()
-{
-	//pass ligth_mvp
-}
 
 function DrawScene()
 {
@@ -176,7 +168,7 @@ function DrawScene()
 	hal.set_light(calculate_dir(pyrona_pos, hal_pos), 500);
 	spaceman.set_light(calculate_dir(pyrona_pos, spaceman_pos), 1000);
 
-	//cube.draw(MVP1);
+
 	skybox.draw(m_mult(perspectiveMatrix, m_mult(CV, trans(100))));
 	spaceman.draw(m_mult(perspectiveMatrix, MV_spaceman), MW_spaceman, normal_transformation_matrix(MW_spaceman));
 	quaoar.draw(m_mult(perspectiveMatrix, MV_quaoar), MW_quaoar, normal_transformation_matrix(MW_quaoar));

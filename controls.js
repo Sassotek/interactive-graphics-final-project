@@ -50,7 +50,7 @@ function eventHandler(event)
 
 document.addEventListener("DOMContentLoaded", function() 
 {
-    InitWebGL();
+    Init();
     
     canvas.addEventListener("wheel" , eventHandler);
     canvas.addEventListener("mousedown", eventHandler);
