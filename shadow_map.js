@@ -23,10 +23,31 @@ shadow_fs = `
 
     varying vec3 f_pos;
 
+    vec4 encodeFloat (float depth)
+        {
+        const vec4 bitShift = vec4(
+            256 * 256 * 256,
+            256 * 256,
+            256,
+            1.0
+        );
+        const vec4 bitMask = vec4(
+            0,
+            1.0 / 256.0,
+            1.0 / 256.0,
+            1.0 / 256.0
+        );
+        vec4 comp = fract(depth * bitShift);
+        comp -= comp.xxyz * bitMask;
+        return comp;
+        }
+
+
     void main()
     {
         float norm = 30.0;
-        gl_FragColor = vec4(f_pos.z/norm, f_pos.z/norm, f_pos.z/norm, 1.0);
+        //gl_FragColor = vec4(f_pos.z/norm, f_pos.z/norm, f_pos.z/norm, 1.0);
+        gl_FragColor = encodeFloat(f_pos.z);
     }
 `;
 
@@ -46,13 +67,18 @@ function ShadowMapInit()
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 512, 512, 0, gl.RGBA, gl.UNSIGNED_BYTE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 512, 512, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 
     shadow_framebuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, shadow_framebuffer);
 
     shadow_depthbuffer = gl.createRenderbuffer();
     gl.bindRenderbuffer(gl.RENDERBUFFER, shadow_depthbuffer);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 512, 512);
+
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 }
 
 function ShadowMapDraw()
