@@ -332,85 +332,8 @@ class spaceman_drawer
         this.texture_c = [];
         this.normals_data = [];
 
-        this.VertexShaderText = `
-                precision mediump float;
-
-                uniform mat4 mvp;
-                uniform mat4 mv;
-                uniform mat3 ntm;
-
-                attribute vec3 pos;
-                attribute vec2 tex_coord;
-                attribute vec3 normals;
-
-                varying vec2 v_tex_coord;
-                varying vec3 frag_normals;
-                varying vec3 frag_positions;
-
-                void main()
-                {
-                    gl_Position = mvp*vec4(pos,1);
-                    frag_positions = vec3(mv*vec4(pos,1));
-                    frag_normals = normalize(ntm*normals);
-                    v_tex_coord = tex_coord;
-                }
-            `;
-
-        this.FragmentShaderText = `
-                precision mediump float;
-
-                uniform sampler2D sampler;
-                uniform sampler2D shadows_sampler;
-                uniform bool texture_set;
-                uniform vec3 light;
-                uniform float alpha;
-                uniform bool light_set;
-
-                varying vec2 v_tex_coord;
-                varying vec3 frag_normals;
-                varying vec3 frag_positions;
-                varying vec4 frag_light_pos;
-
-                void main()
-                {
-                    float intensity = 1.0;
-                    float increment = 2.0;
-                    float K_diffuse;
-                    float K_specular;
-
-                    if(light_set)
-                    {
-                        vec3 omega = normalize(light);
-                        vec3 n = normalize(frag_normals);
-                        vec3 v = -normalize(frag_positions);
-                        vec3 h = normalize(omega+v);  
-                        float specular = max(dot(h,n), 0.0);
-
-                        K_diffuse = min(increment*max(dot(omega,n), 0.0), 1.0);
-                        K_specular = pow(specular, alpha);
-                    }
-                    
-                    if(texture_set)
-                    {
-                        if(light_set)
-                        {
-                            vec4 tex_color = texture2D(sampler, v_tex_coord);
-                            vec3 color = intensity*(K_diffuse*tex_color.rgb + K_specular*vec3(1.0, 1.0, 1.0)); 
-                            gl_FragColor = vec4(color, 1.0);
-                        }
-                        else
-                        {
-                            gl_FragColor = texture2D(sampler, v_tex_coord);
-                        }
-                    }
-
-                    else
-                    {
-                        gl_FragColor = vec4(frag_normals, 1.0);
-                        //gl_FragColor = intensity*(lamb*vec4(1,0.1,0.5,1)+pow(specular, alpha)*vec4(1,1,1,1));
-                    }
-                }
-            `;
+        this.VertexShaderText = mainVertexShaderText;
+        this.FragmentShaderText = mainFragmentShaderText;
         
         this.prog = program_init(this.VertexShaderText, this.FragmentShaderText);
         gl.useProgram(this.prog);
@@ -517,85 +440,8 @@ class planet_drawer
         this.texture_c = [];
         this.normals_data = [];
 
-        this.VertexShaderText = `
-                precision mediump float;
-
-                uniform mat4 mvp;
-                uniform mat4 mv;
-                uniform mat3 ntm;
-
-                attribute vec3 pos;
-                attribute vec2 tex_coord;
-                attribute vec3 normals;
-
-                varying vec2 v_tex_coord;
-                varying vec3 frag_normals;
-                varying vec3 frag_positions;
-
-                void main()
-                {
-                    gl_Position = mvp*vec4(pos,1);
-                    frag_positions = vec3(mv*vec4(pos,1));
-                    frag_normals = normalize(ntm*normals);
-                    v_tex_coord = tex_coord;
-                }
-            `;
-
-        this.FragmentShaderText = `
-                precision mediump float;
-
-                uniform sampler2D sampler;
-                uniform sampler2D shadows_sampler;
-                uniform bool texture_set;
-                uniform vec3 light;
-                uniform float alpha;
-                uniform bool light_set;
-
-                varying vec2 v_tex_coord;
-                varying vec3 frag_normals;
-                varying vec3 frag_positions;
-                varying vec4 frag_light_pos;
-
-                void main()
-                {
-                    float intensity = 1.0;
-                    float increment = 2.0;
-                    float K_diffuse;
-                    float K_specular;
-
-                    if(light_set)
-                    {
-                        vec3 omega = normalize(light);
-                        vec3 n = normalize(frag_normals);
-                        vec3 v = -normalize(frag_positions);
-                        vec3 h = normalize(omega+v);  
-                        float specular = max(dot(h,n), 0.0);
-
-                        K_diffuse = min(increment*max(dot(omega,n), 0.0), 1.0);
-                        K_specular = pow(specular, alpha);
-                    }
-                    
-                    if(texture_set)
-                    {
-                        if(light_set)
-                        {
-                            vec4 tex_color = texture2D(sampler, v_tex_coord);
-                            vec3 color = intensity*(K_diffuse*tex_color.rgb + K_specular*vec3(1.0, 1.0, 1.0)); 
-                            gl_FragColor = vec4(color, 1.0);
-                        }
-                        else
-                        {
-                            gl_FragColor = texture2D(sampler, v_tex_coord);
-                        }
-                    }
-
-                    else
-                    {
-                        gl_FragColor = vec4(frag_normals, 1.0);
-                        //gl_FragColor = intensity*(lamb*vec4(1,0.1,0.5,1)+pow(specular, alpha)*vec4(1,1,1,1));
-                    }
-                }
-            `;
+        this.VertexShaderText = mainVertexShaderText;
+        this.FragmentShaderText = mainFragmentShaderText;
         
         this.prog = program_init(this.VertexShaderText, this.FragmentShaderText);
         gl.useProgram(this.prog);
@@ -879,3 +725,85 @@ class skybox_drawer
 
 }
 
+
+
+
+var mainVertexShaderText = `
+    precision mediump float;
+
+    uniform mat4 mvp;
+    uniform mat4 mv;
+    uniform mat3 ntm;
+
+    attribute vec3 pos;
+    attribute vec2 tex_coord;
+    attribute vec3 normals;
+
+    varying vec2 v_tex_coord;
+    varying vec3 frag_normals;
+    varying vec3 frag_positions;
+
+    void main()
+    {
+        gl_Position = mvp*vec4(pos,1);
+        frag_positions = vec3(mv*vec4(pos,1));
+        frag_normals = normalize(ntm*normals);
+        v_tex_coord = tex_coord;
+    }
+`;
+
+var mainFragmentShaderText = `
+    precision mediump float;
+
+    uniform sampler2D sampler;
+    uniform sampler2D shadows_sampler;
+    uniform bool texture_set;
+    uniform vec3 light;
+    uniform float alpha;
+    uniform bool light_set;
+
+    varying vec2 v_tex_coord;
+    varying vec3 frag_normals;
+    varying vec3 frag_positions;
+    varying vec4 frag_light_pos;
+
+    void main()
+    {
+        float intensity = 1.0;
+        float increment = 2.0;
+        float K_diffuse;
+        float K_specular;
+
+        if(light_set)
+        {
+            vec3 omega = normalize(light);
+            vec3 n = normalize(frag_normals);
+            vec3 v = -normalize(frag_positions);
+            vec3 h = normalize(omega+v);  
+            float specular = max(dot(h,n), 0.0);
+
+            K_diffuse = min(increment*max(dot(omega,n), 0.0), 1.0);
+            K_specular = pow(specular, alpha);
+        }
+        
+        if(texture_set)
+        {
+            if(light_set)
+            {
+                vec4 tex_color = texture2D(sampler, v_tex_coord);
+                vec3 color = intensity*(K_diffuse*tex_color.rgb + K_specular*vec3(1.0, 1.0, 1.0)); 
+                gl_FragColor = vec4(color, 1.0);
+            }
+            else
+            {
+                gl_FragColor = texture2D(sampler, v_tex_coord);
+            }
+        }
+
+        else
+        {
+            gl_FragColor = vec4(frag_normals, 1.0);
+            //gl_FragColor = intensity*(lamb*vec4(1,0.1,0.5,1)+pow(specular, alpha)*vec4(1,1,1,1));
+        }
+    }
+`;
