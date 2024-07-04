@@ -332,6 +332,13 @@ class spaceman_drawer
         this.texture_c = [];
         this.normals_data = [];
 
+        this.l_prog = program_init(shadow_vs, shadow_fs);
+        gl.useProgram(this.l_prog);
+        this.lmv = gl.getUniformLocation(this.l_prog,'lmv');
+        this.lmvp = gl.getUniformLocation(this.l_prog, 'lmvp');
+        this.l_pos = gl.getAttribLocation(this.l_prog, 'l_pos');
+        
+
         this.VertexShaderText = mainVertexShaderText;
         this.FragmentShaderText = mainFragmentShaderText;
         
@@ -350,12 +357,15 @@ class spaceman_drawer
         this.mvp = gl.getUniformLocation(this.prog, 'mvp');
         this.mv = gl.getUniformLocation(this.prog, 'mv');
         this.ntm = gl.getUniformLocation(this.prog, 'ntm');
-        
+        this.l_mvp = gl.getUniformLocation(this.prog, 'l_mvp');
+
+        this.depth_sampler = gl.getUniformLocation(this.prog, 'depth_sampler');
         this.sampler = gl.getUniformLocation(this.prog, 'sampler');
         this.texture_set = gl.getUniformLocation(this.prog, 'texture_set');
         this.light = gl.getUniformLocation(this.prog, 'light');
         this.alpha = gl.getUniformLocation(this.prog, 'alpha');
         this.light_set = gl.getUniformLocation(this.prog, 'light_set');
+        this.shadows_set = gl.getUniformLocation(this.prog, 'shadows_set');
 
         this.vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -373,6 +383,7 @@ class spaceman_drawer
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normals_data), gl.STATIC_DRAW);
 
         gl.uniform1i(this.light_set, false);
+        gl.uniform1i(this.shadows_set, false);
         
     }
     
@@ -440,12 +451,18 @@ class planet_drawer
         this.texture_c = [];
         this.normals_data = [];
 
+        this.l_prog = program_init(shadow_vs, shadow_fs);
+        gl.useProgram(this.l_prog);
+        this.lmv = gl.getUniformLocation(this.l_prog,'lmv');
+        this.lmvp = gl.getUniformLocation(this.l_prog, 'lmvp');
+        this.l_pos = gl.getAttribLocation(this.l_prog, 'l_pos');
+        
+
         this.VertexShaderText = mainVertexShaderText;
         this.FragmentShaderText = mainFragmentShaderText;
         
         this.prog = program_init(this.VertexShaderText, this.FragmentShaderText);
         gl.useProgram(this.prog);
-
         
         this.obj_data = obj_parser(planet_string);
         this.vertices = this.obj_data.vertex_buffer;
@@ -458,12 +475,15 @@ class planet_drawer
         this.mvp = gl.getUniformLocation(this.prog, 'mvp');
         this.mv = gl.getUniformLocation(this.prog, 'mv');
         this.ntm = gl.getUniformLocation(this.prog, 'ntm');
+        this.l_mvp = gl.getUniformLocation(this.prog, 'l_mvp');
 
+        this.depth_sampler = gl.getUniformLocation(this.prog, 'depth_sampler');
         this.sampler = gl.getUniformLocation(this.prog, 'sampler');
         this.texture_set = gl.getUniformLocation(this.prog, 'texture_set');
         this.light = gl.getUniformLocation(this.prog, 'light');
         this.alpha = gl.getUniformLocation(this.prog, 'alpha');
         this.light_set = gl.getUniformLocation(this.prog, 'light_set');
+        this.shadows_set = gl.getUniformLocation(this.prog, 'shadows_set');
 
         this.vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -482,9 +502,6 @@ class planet_drawer
 
         gl.uniform1i(this.light_set, false);
         gl.uniform1i(this.shadows_set, false);
-        gl.uniform1i(this.f_shadows_set, false);
-
-
     }
 
     set_texture(img , texture_unit)
@@ -653,7 +670,7 @@ class skybox_drawer
         this.texture = gl.createTexture();
         gl.uniform1i(this.texture_set, false);
         
-        gl.activeTexture(gl.TEXTURE0);
+        gl.activeTexture(gl.TEXTURE8);
         gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.texture);
     
         const env_url = 'http://0.0.0.0:8000/sky_texture.png';
@@ -704,7 +721,7 @@ class skybox_drawer
     
         gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
         gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-        gl.uniform1i(this.sampler, 0);
+        gl.uniform1i(this.sampler, 8);
         gl.uniform1i(this.texture_set, true);
     }
     
@@ -734,6 +751,7 @@ var mainVertexShaderText = `
     uniform mat4 mvp;
     uniform mat4 mv;
     uniform mat3 ntm;
+    uniform mat4 l_mvp; 
 
     attribute vec3 pos;
     attribute vec2 tex_coord;
@@ -742,12 +760,14 @@ var mainVertexShaderText = `
     varying vec2 v_tex_coord;
     varying vec3 frag_normals;
     varying vec3 frag_positions;
+    varying vec4 light_positions;
 
     void main()
     {
         gl_Position = mvp*vec4(pos,1);
         frag_positions = vec3(mv*vec4(pos,1));
         frag_normals = normalize(ntm*normals);
+        light_positions = l_mvp*vec4(pos,1);
         v_tex_coord = tex_coord;
     }
 `;
@@ -756,16 +776,28 @@ var mainFragmentShaderText = `
     precision mediump float;
 
     uniform sampler2D sampler;
-    uniform sampler2D shadows_sampler;
+    uniform sampler2D depth_sampler;
     uniform bool texture_set;
     uniform vec3 light;
     uniform float alpha;
     uniform bool light_set;
+    uniform bool shadows_set;
 
     varying vec2 v_tex_coord;
     varying vec3 frag_normals;
     varying vec3 frag_positions;
-    varying vec4 frag_light_pos;
+    varying vec4 light_positions;
+
+    float decodeFloat (vec4 color) 
+    {
+        const vec4 bitShift = vec4(
+            1.0 / (256.0 * 256.0 * 256.0),
+            1.0 / (256.0 * 256.0),
+            1.0 / 256.0,
+            1
+        );
+        return dot(color, bitShift);
+    }
 
     void main()
     {
@@ -773,6 +805,28 @@ var mainFragmentShaderText = `
         float increment = 2.0;
         float K_diffuse;
         float K_specular;
+        vec3 frag_depth = light_positions.xyz;
+        float acne_remover = 0.007;
+        frag_depth -= acne_remover;
+
+        if(shadows_set)
+        {
+            for (int x = -1; x <= 1; x++) 
+            {
+                for (int y = -1; y <= 1; y++) 
+                {
+                    float texelDepth = decodeFloat(texture2D(depth_sampler,frag_depth.xy + vec2(x, y)));
+                    if(frag_depth.z < texelDepth) 
+                    {
+                        intensity = 1.0;
+                    }
+                    else
+                    {
+                        intensity = 0.2;
+                    }
+                }
+            }
+        }
 
         if(light_set)
         {

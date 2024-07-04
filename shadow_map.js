@@ -6,7 +6,7 @@ shadow_vs = `
     precision mediump float;
 
     uniform mat4 lmv;
-    uniform mat4 projection;
+    uniform mat4 lmvp;
 
     attribute vec3 l_pos;
     varying vec3 f_pos;
@@ -14,7 +14,7 @@ shadow_vs = `
     void main()
     {
         f_pos = (lmv*vec4(l_pos, 1.0)).xyz;
-        gl_Position = projection*lmv*vec4(l_pos, 1.0); 
+        gl_Position = lmvp*vec4(l_pos, 1.0); 
     }
 `;
 
@@ -54,12 +54,12 @@ shadow_fs = `
 
 function ShadowMapInit()
 {
-    shadow_map_program = program_init(shadow_vs, shadow_fs);
+    /*shadow_map_program = program_init(shadow_vs, shadow_fs);
 
     l_pos = gl.getAttribLocation(this.prog, 'pos');
 
     lmv = gl.getUniformLocation(this.shadow_map_program, 'lmv');
-    projection = gl.getUniformLocation(this.shadow_map_program, 'projection');
+    projection = gl.getUniformLocation(this.shadow_map_program, 'projection');*/
 
     shadow_texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, shadow_texture);
@@ -81,7 +81,29 @@ function ShadowMapInit()
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 }
 
-function ShadowMapDraw()
+function ShadowMapSet(objects) //set light and shadowmap informations
 {
+    /*
+    gl.activeTexture(gl.TEXTURE0)
+    gl.bindTexture(gl.TEXTURE_2D, shadowDepthTexture)
+    for each object light program and main program
+        generate light mv
+        set uniforms
+
+        call object function to use depth texture
+        gl.uniform1i(samplerUniform <-----main_fs, 0)
+
+    */ 
+}
+
+function ShadowMapDraw() //draw shadowed objects
+{
+    /*
+    bind frame buffer
+
+    shadow_draw objects(use light program, bind buffer, draw);
+
+    unbind framebuffer
+    */
 
 }
