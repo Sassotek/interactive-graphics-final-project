@@ -76,12 +76,15 @@ function ShadowMapInit()
     gl.bindRenderbuffer(gl.RENDERBUFFER, shadow_depthbuffer);
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 512, 512);
 
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, shadow_texture, 0);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, shadow_depthbuffer);
+
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 }
 
-function ShadowMapSet(objects) //set light and shadowmap informations
+function ShadowMapSet() //set light and shadowmap informations
 {
     /*
     gl.activeTexture(gl.TEXTURE0)
@@ -93,8 +96,19 @@ function ShadowMapSet(objects) //set light and shadowmap informations
         call object function to use depth texture
         gl.uniform1i(samplerUniform <-----main_fs, 0)
 
-    */ 
+    */
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, shadow_texture); 
+
+    gl.useProgram(spaceman.prog);
+    spaceman.use_shadows = 1;
+    gl.uniform1i(spaceman.depth_sampler, 0);
+
+    gl.useProgram(hal.prog);
+    hal.use_shadows = 1;
+    gl.uniform1i(hal.depth_sampler, 0);    
 }
+
 
 function ShadowMapDraw() //draw shadowed objects
 {

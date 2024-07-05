@@ -332,6 +332,8 @@ class spaceman_drawer
         this.texture_c = [];
         this.normals_data = [];
 
+        this.use_shadows = 0;
+
         this.l_prog = program_init(shadow_vs, shadow_fs);
         gl.useProgram(this.l_prog);
         this.lmv = gl.getUniformLocation(this.l_prog,'lmv');
@@ -415,11 +417,47 @@ class spaceman_drawer
         gl.uniform1i(this.light_set, true);
     }
 
-    draw(m_p, m_w, n_w)
+    draw_shadow(l_p, l_v, m_p, m_w, n_w)
+    {
+        if(this.use_shadows)
+            {
+                gl.useProgram(this.l_prog);
+                this.num_triangles = this.vertices.length / 3;
+
+                gl.uniformMatrix4fv(this.lmvp, false, l_p);
+                gl.uniformMatrix4fv(this.lmv, false, l_v);
+
+                gl.bindFramebuffer(gl.FRAMEBUFFER, shadow_framebuffer)
+
+                gl.viewport(0, 0, 512, 512);
+                gl.clearColor(0, 0, 0, 1);
+                gl.clearDepth(1.0);
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+                gl.vertexAttribPointer(this.l_pos, 3, gl.FLOAT, gl.FALSE, 0 ,0);
+                gl.enableVertexAttribArray(this.l_pos);
+
+                gl.drawArrays(gl.TRIANGLES, 0, this.num_triangles);
+                
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            }
+        gl.viewport( 0, 0, canvas.width, canvas.height );  
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        this.draw(m_p, m_w, n_w);
+    }
+
+    draw(m_p, m_w, n_w, l_p = 0)
     {    
         gl.useProgram(this.prog);
         this.num_triangles = this.vertices.length / 3;
-    
+        
+        if(l_p != 0)
+            {
+                gl.uniformMatrix4fv(this.lmvp, false, l_p);
+                gl.uniform1i(this.shadows_set, true);
+            }
+        
         gl.uniformMatrix4fv(this.mvp, false, m_p);
         gl.uniformMatrix4fv(this.mv, false, m_w);
         gl.uniformMatrix3fv(this.ntm, false, n_w);
@@ -437,7 +475,6 @@ class spaceman_drawer
         gl.enableVertexAttribArray(this.normals);
 
         gl.drawArrays(gl.TRIANGLES, 0, this.num_triangles);
-
     }
 }
 
@@ -450,6 +487,8 @@ class planet_drawer
         this.vertices = [];
         this.texture_c = [];
         this.normals_data = [];
+
+        this.use_shadows = 0;
 
         this.l_prog = program_init(shadow_vs, shadow_fs);
         gl.useProgram(this.l_prog);
@@ -532,17 +571,46 @@ class planet_drawer
         gl.uniform1i(this.light_set, true);
     }
 
-    set_shadow_map(light_mvp, m_w)
+    draw_shadow(l_p, l_v, m_p, m_w, n_w)
     {
-        gl.uniformMatrix4fv(this.lvp, false, m_mult(light_mvp, m_w));
-        gl.uniform1i(this.shadows_set, true);
-        gl.uniform1i(this.f_shadows_set, true);
+        if(this.use_shadows)
+            {
+                gl.useProgram(this.l_prog);
+                this.num_triangles = this.vertices.length / 3;
+
+                gl.uniformMatrix4fv(this.lmvp, false, l_p);
+                gl.uniformMatrix4fv(this.lmv, false, l_v);
+
+                gl.bindFramebuffer(gl.FRAMEBUFFER, shadow_framebuffer)
+
+                gl.viewport(0, 0, 512, 512);
+                gl.clearColor(0, 0, 0, 1);
+                gl.clearDepth(1.0);
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+                gl.vertexAttribPointer(this.l_pos, 3, gl.FLOAT, gl.FALSE, 0 ,0);
+                gl.enableVertexAttribArray(this.l_pos);
+
+                gl.drawArrays(gl.TRIANGLES, 0, this.num_triangles);
+                
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            }
+        this.draw(m_p, m_w, n_w);
     }
 
-    draw(m_p, m_w, n_w)
+    
+
+    draw(m_p, m_w, n_w, l_p = 0)
     {    
         gl.useProgram(this.prog);
         this.num_triangles = this.vertices.length / 3;
+
+        if(l_p != 0)
+            {
+                gl.uniformMatrix4fv(this.lmvp, false, l_p);
+                gl.uniform1i(this.shadows_set, true);
+            }
     
         gl.uniformMatrix4fv(this.mvp, false, m_p);
         gl.uniformMatrix4fv(this.mv, false, m_w);

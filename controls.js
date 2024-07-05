@@ -11,6 +11,8 @@ canvas_zoom = function( s )
     if(camera_position.z < -10) camera_position.z = -10;
 
 	UpdateViewMatrices();
+    UpdateTransformations();
+    ShadowMapSet();
 	DrawScene();
 }
 
@@ -42,6 +44,8 @@ function eventHandler(event)
                     cx = event.clientX;
                     cy = event.clientY;
                     UpdateViewMatrices();
+                    UpdateTransformations();
+                    ShadowMapSet();
                     DrawScene();
                 }
             break;
