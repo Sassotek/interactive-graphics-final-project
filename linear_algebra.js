@@ -222,3 +222,136 @@ function calculate_dir(from, to, rotation = new vec3(0,0,0))
     return result;
 }
 
+function trans_(scale = 1, dir = new vec3(0,0,0), pos = new vec3(0,0,0))
+{
+    //dir.mult(deg2rad);
+    var r = [];
+
+    r = [
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
+    ];
+
+    if(scale != 1)
+        {
+            var s = [
+                scale, 0.0, 0.0, 0.0,
+                0.0, scale, 0.0, 0.0,
+                0.0, 0.0, scale, 0.0,
+                0.0, 0.0, 0.0, 1.0 
+            ];
+         
+             r = m_mult(r,s);
+        }
+
+    if(dir.x != 0)
+        {
+            var Rx = [
+                1.0, 0.0, 0.0, 0.0,
+                0.0, Math.cos(dir.x), Math.sin(dir.x), 0.0,
+                0.0, -Math.sin(dir.x), Math.cos(dir.x), 0.0,
+                0.0, 0.0, 0.0, 1.0
+            ];
+            
+            r = m_mult(r,Rx);
+            //console.log("multiplied x");
+        }
+
+    if(dir.y != 0)
+        {
+	        var Ry = [
+                Math.cos(dir.y), 0.0 , -Math.sin(dir.y), 0.0,
+		        0.0, 1.0, 0.0, 0.0,
+			    Math.sin(dir.y), 0.0, Math.cos(dir.y), 0.0,
+			    0.0, 0.0, 0.0, 1.0
+            ];
+        
+            r = m_mult(r, Ry);
+            //console.log("multiplied y");
+        }
+	
+	 if(dir.z != 0)
+        {
+            
+            const Rz = [
+                Math.cos(dir.z), Math.sin(dir.z) , 0.0 ,0.0,
+                -Math.sin(dir.z),Math.cos(dir.z), 0.0, 0.0,
+                0.0, 0.0, 1.0, 0.0,
+                0.0, 0.0, 0.0, 1.0
+            ];
+
+            r = m_mult(r,Rz);
+            //console.log("multiplied z");
+        }
+
+    var transl = [
+    	1.0, 0.0, 0.0, 0.0,
+		0.0, 1.0, 0.0, 0.0,
+		0.0, 0.0, 1.0, 0.0,
+		pos.x, pos.y, pos.z, 1.0
+	];
+
+    r = m_mult(r,transl);
+    
+	return r;
+}
+
+function normal_transformation_matrix(trans)
+{
+    return n_r = [
+        trans[0],trans[1],trans[2],
+        trans[4],trans[5],trans[6],
+        trans[8],trans[9],trans[10]
+    ]; 
+}
+
+function calculate_dir(from, to, rotation = new vec3(0,0,0))
+{
+    var result = new vec3(from.x-to.x, from.y-to.y, from.z-to.z);
+    
+    R = [
+        1.0, 0.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 0.0, 1.0
+    ];
+
+    if(rotation.x != 0)
+        {
+            var Rx = [
+                1.0,        0.0,            0.0,
+                0.0, Math.cos(rotation.x), Math.sin(rotation.x),
+                0.0, -Math.sin(rotation.x), Math.cos(rotation.x) 
+            ];
+            
+            R = m_mult(R,Rx);
+        }
+
+    if(rotation.y != 0)
+        {
+	        var Ry = [
+                Math.cos(rotation.y), 0.0 , -Math.sin(rotation.y),
+		            0.0,         1.0,        0.0,
+			    Math.sin(rotation.y), 0.0, Math.cos(rotation.y)
+            ];
+        
+            R = m_mult(R, Ry);
+        }
+	
+	 if(rotation.z != 0)
+        {
+            
+            const Rz = [
+                Math.cos(rotation.z), Math.sin(rotation.z) , 0.0,
+                -Math.sin(rotation.z),Math.cos(rotation.z), 0.0,
+                    0.0,            0.0,          1.0
+            ];
+
+            R = m_mult(R, Rz);
+        }
+    
+    result.m_prod(R);
+    
+    return result;
+}

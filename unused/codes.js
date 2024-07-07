@@ -428,3 +428,32 @@ function trans(scale = 1, dir = vec3(0,0,0), pos = vec3(0,0,0)) //first scale, s
 }*/
 
 //////////////////column major version/////////////////
+
+/*MVP1 = m_mult(perspectiveMatrix, CV);
+	MVP2 = m_mult(perspectiveMatrix, m_mult(CV, [
+		1,0,0,0,
+		0,1,0,0,
+		0,0,1,0,
+		2,0,0,1
+	]));*/
+
+
+    if(shadows_set)
+        {
+            for (int x = -1; x <= 1; x++) 
+            {
+                for (int y = -1; y <= 1; y++) 
+                {
+                    //float texelDepth = decodeFloat(texture2D(depth_sampler,frag_depth.xy + vec2(x, y)));
+                    float texelDepth = decodeFloat(textureCube(depth_sampler,frag_depth.xy + vec2(x, y)));
+                    if(frag_depth.z < texelDepth) 
+                    {
+                        intensity = 1.0;
+                    }
+                    else
+                    {
+                        intensity = 0.1;
+                    }
+                }
+            }
+        }

@@ -18,3 +18,5 @@ lighting ----> done
 Shadow mapping ----> 
 planet animation ---->
 
+sposta l'origine dal centro alla posizione di pyrona
+da provare: translare tutto della posizione di pyrona

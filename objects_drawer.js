@@ -18,24 +18,23 @@ function program_init(vertex_shader_text , fragment_shader_text)
         }
     if(!gl.getShaderParameter(fragmentS, gl.COMPILE_STATUS)){
         console.error('Error compiling shader', gl.getShaderInfoLog(fragmentS));
+        return;
         }
             
     prog = gl.createProgram();
     gl.attachShader(prog, virtualS);
     gl.attachShader(prog, fragmentS);
     
-    gl.linkProgram(prog);
-            
+    gl.linkProgram(prog);        
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
         console.error('ERROR linking program!', gl.getProgramInfoLog(this.prog));
         return;
     }
-    gl.validateProgram(prog);
-    if (!gl.getProgramParameter(prog, gl.VALIDATE_STATUS)) {
-        console.error('ERROR validating program!', gl.getProgramInfoLog(this.prog));
-        return;
-    }
 
+    gl.validateProgram(prog);
+    if(!gl.getProgramParameter(prog, gl.VALIDATE_STATUS)) {
+        console.error('ERROR validating program!', gl.getProgramInfoLog(this.prog));
+    }
     return prog;
 }
 
@@ -417,64 +416,51 @@ class spaceman_drawer
         gl.uniform1i(this.light_set, true);
     }
 
-    draw_shadow(l_p, l_v, m_p, m_w, n_w)
+    draw_shadow(l_p, l_v)
     {
         if(this.use_shadows)
             {
-                gl.useProgram(this.l_prog);
+                gl.useProgram(shadowmap_program);
                 this.num_triangles = this.vertices.length / 3;
 
-                gl.uniformMatrix4fv(this.lmvp, false, l_p);
-                gl.uniformMatrix4fv(this.lmv, false, l_v);
-
-                gl.bindFramebuffer(gl.FRAMEBUFFER, shadow_framebuffer)
-
-                gl.viewport(0, 0, 512, 512);
-                gl.clearColor(0, 0, 0, 1);
-                gl.clearDepth(1.0);
-                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+                gl.uniformMatrix4fv(lmvp, false, l_p);
+                gl.uniformMatrix4fv(lmv, false, l_v);
 
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-                gl.vertexAttribPointer(this.l_pos, 3, gl.FLOAT, gl.FALSE, 0 ,0);
-                gl.enableVertexAttribArray(this.l_pos);
+                gl.vertexAttribPointer(l_pos, 3, gl.FLOAT, gl.FALSE, 0 ,0);
+                gl.enableVertexAttribArray(l_pos);
 
                 gl.drawArrays(gl.TRIANGLES, 0, this.num_triangles);
                 
-                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                gl.useProgram(this.prog);
+                gl.uniformMatrix4fv(this.l_mvp, false, l_p);
+                gl.uniform1i(this.shadows_set, true);
             }
-        gl.viewport( 0, 0, canvas.width, canvas.height );  
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        this.draw(m_p, m_w, n_w);
     }
 
-    draw(m_p, m_w, n_w, l_p = 0)
+    draw(m_p, m_w, n_w)
     {    
         gl.useProgram(this.prog);
         this.num_triangles = this.vertices.length / 3;
         
-        if(l_p != 0)
-            {
-                gl.uniformMatrix4fv(this.lmvp, false, l_p);
-                gl.uniform1i(this.shadows_set, true);
-            }
-        
         gl.uniformMatrix4fv(this.mvp, false, m_p);
         gl.uniformMatrix4fv(this.mv, false, m_w);
         gl.uniformMatrix3fv(this.ntm, false, n_w);
-
+        
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.vertexAttribPointer(this.pos, 3, gl.FLOAT, gl.FALSE, 0 ,0);
 		gl.enableVertexAttribArray(this.pos);
-
+        
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.textureBuffer);
 		gl.vertexAttribPointer(this.tex_coord, 2, gl.FLOAT, gl.FALSE, 0 ,0);
 		gl.enableVertexAttribArray(this.tex_coord);
-
+        
         gl.bindBuffer(gl.ARRAY_BUFFER, this.normalsBuffer);
         gl.vertexAttribPointer(this.normals, 3 ,gl.FLOAT, gl.FALSE, 0, 0);
         gl.enableVertexAttribArray(this.normals);
-
+        
         gl.drawArrays(gl.TRIANGLES, 0, this.num_triangles);
+        
     }
 }
 
@@ -489,13 +475,6 @@ class planet_drawer
         this.normals_data = [];
 
         this.use_shadows = 0;
-
-        this.l_prog = program_init(shadow_vs, shadow_fs);
-        gl.useProgram(this.l_prog);
-        this.lmv = gl.getUniformLocation(this.l_prog,'lmv');
-        this.lmvp = gl.getUniformLocation(this.l_prog, 'lmvp');
-        this.l_pos = gl.getAttribLocation(this.l_prog, 'l_pos');
-        
 
         this.VertexShaderText = mainVertexShaderText;
         this.FragmentShaderText = mainFragmentShaderText;
@@ -546,6 +525,7 @@ class planet_drawer
     set_texture(img , texture_unit)
     {
         gl.activeTexture(gl.TEXTURE0 + texture_unit);
+        //console.log(gl.getUniform(this.prog, this.sampler));
         gl.useProgram(this.prog);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
@@ -571,46 +551,34 @@ class planet_drawer
         gl.uniform1i(this.light_set, true);
     }
 
-    draw_shadow(l_p, l_v, m_p, m_w, n_w)
+    draw_shadow(l_p, l_v)
     {
         if(this.use_shadows)
             {
-                gl.useProgram(this.l_prog);
+                gl.useProgram(shadowmap_program);
                 this.num_triangles = this.vertices.length / 3;
 
-                gl.uniformMatrix4fv(this.lmvp, false, l_p);
-                gl.uniformMatrix4fv(this.lmv, false, l_v);
-
-                gl.bindFramebuffer(gl.FRAMEBUFFER, shadow_framebuffer)
-
-                gl.viewport(0, 0, 512, 512);
-                gl.clearColor(0, 0, 0, 1);
-                gl.clearDepth(1.0);
-                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+                gl.uniformMatrix4fv(lmvp, false, l_p);
+                gl.uniformMatrix4fv(lmv, false, l_v);
 
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-                gl.vertexAttribPointer(this.l_pos, 3, gl.FLOAT, gl.FALSE, 0 ,0);
-                gl.enableVertexAttribArray(this.l_pos);
+                gl.vertexAttribPointer(l_pos, 3, gl.FLOAT, gl.FALSE, 0, 0);
+                gl.enableVertexAttribArray(l_pos);
 
                 gl.drawArrays(gl.TRIANGLES, 0, this.num_triangles);
                 
-                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                gl.useProgram(this.prog);
+                gl.uniformMatrix4fv(this.l_mvp, false, l_p);
+                gl.uniform1i(this.shadows_set, true);
             }
-        this.draw(m_p, m_w, n_w);
     }
 
     
 
-    draw(m_p, m_w, n_w, l_p = 0)
+    draw(m_p, m_w, n_w)
     {    
         gl.useProgram(this.prog);
         this.num_triangles = this.vertices.length / 3;
-
-        if(l_p != 0)
-            {
-                gl.uniformMatrix4fv(this.lmvp, false, l_p);
-                gl.uniform1i(this.shadows_set, true);
-            }
     
         gl.uniformMatrix4fv(this.mvp, false, m_p);
         gl.uniformMatrix4fv(this.mv, false, m_w);
@@ -738,7 +706,7 @@ class skybox_drawer
         this.texture = gl.createTexture();
         gl.uniform1i(this.texture_set, false);
         
-        gl.activeTexture(gl.TEXTURE8);
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.texture);
     
         const env_url = 'http://0.0.0.0:8000/sky_texture.png';
@@ -789,7 +757,7 @@ class skybox_drawer
     
         gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
         gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-        gl.uniform1i(this.sampler, 8);
+        gl.uniform1i(this.sampler, 0);
         gl.uniform1i(this.texture_set, true);
     }
     
@@ -844,7 +812,8 @@ var mainFragmentShaderText = `
     precision mediump float;
 
     uniform sampler2D sampler;
-    uniform sampler2D depth_sampler;
+    //uniform sampler2D depth_sampler;
+    uniform samplerCube depth_sampler;
     uniform bool texture_set;
     uniform vec3 light;
     uniform float alpha;
@@ -876,25 +845,6 @@ var mainFragmentShaderText = `
         vec3 frag_depth = light_positions.xyz;
         float acne_remover = 0.007;
         frag_depth -= acne_remover;
-
-        if(shadows_set)
-        {
-            for (int x = -1; x <= 1; x++) 
-            {
-                for (int y = -1; y <= 1; y++) 
-                {
-                    float texelDepth = decodeFloat(texture2D(depth_sampler,frag_depth.xy + vec2(x, y)));
-                    if(frag_depth.z < texelDepth) 
-                    {
-                        intensity = 1.0;
-                    }
-                    else
-                    {
-                        intensity = 0.2;
-                    }
-                }
-            }
-        }
 
         if(light_set)
         {

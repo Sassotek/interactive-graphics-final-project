@@ -1,10 +1,14 @@
 var canvas, gl;
+var cam_z = 5;
+var camera_position = new vec3(0,0,-cam_z);
 var camera_angle = new vec3(45,45,0);
 camera_angle.mult(deg2rad);
-var cam_z = 5;
-var camera_position = new vec3(0,0,-cam_z)
+
+var light_position;
+var light_angles = [new vec3(0,90,0), new vec3(0,-90,0),  new vec3(90,0,0), new vec3(-90,0,0), new vec3(0,0,0), new vec3(0,180,0)];
+
 var CV, LV, MVP1, MW_quaoar, MV_quaoar, MW_kamillis, MV_kamillis, MW_pyrona, MV_pyrona, MW_hagaton, MV_hagaton, MW_ophin, MV_ophin, MW_hal, MV_hal, MW_spaceman, MV_spaceman; // view matrices
-var L_spaceman, L_hal;
+var LVs;
 var cube, skybox, quaoar, kamillis, pyrona, hagaton, ophin, hal, spaceman;
 
 var axys = 4.75;
@@ -13,8 +17,12 @@ var kamillis_pos = new vec3(-40,-25,-40);
 var pyrona_pos = new vec3(30,-axys,0);
 var hagaton_pos = new vec3(25,30,-35);
 var ophin_pos = new vec3(0,-axys,0);
-var hal_pos = new vec3(45,-axys,0);
+var hal_pos = new vec3(30,-axys, 15);
 var spaceman_pos = new vec3(0, 0, 0);
+//var spaceman_pos = new vec3(36, -5, 0);
+
+light_position = pyrona_pos;
+
 
 function initWebGL()
 {
@@ -104,46 +112,51 @@ function ProjectionMatrix( fov_angle=60 )
 
 function UpdateViewMatrices()
 {
-	var perspectiveMatrix = ProjectionMatrix();
-	CV  = trans(1, camera_angle, camera_position );
-	LV = trans(1.0, pyrona_pos);
-	
-	/*MVP1 = m_mult(perspectiveMatrix, CV);
-	MVP2 = m_mult(perspectiveMatrix, m_mult(CV, [
-		1,0,0,0,
-		0,1,0,0,
-		0,0,1,0,
-		2,0,0,1
-	]));*/
+	CV = trans(1, camera_angle, camera_position);
+	LV_positive_x = trans(1, light_angles[0], light_position);
+	LV_negative_x = trans(1, light_angles[1], light_position);
+	LV_positive_y = trans(1, light_angles[2], light_position);
+	LV_negative_y = trans(1, light_angles[3], light_position);
+	LV_positive_z = trans(1, light_angles[4], light_position);
+	LV_negative_z = trans(1, light_angles[5], light_position);
+
+	LVs = [LV_positive_x, LV_negative_x, LV_positive_y, LV_negative_y, LV_positive_z, LV_negative_z];
 }
 
 function UpdateTransformations()
 {
-	var spaceman_rot = new vec3(0,deg2rad*90,0);
+	
+	var spaceman_rot = new vec3(0, deg2rad*90,0);
+
 	MW_spaceman = trans(0.2, spaceman_rot, spaceman_pos);
 	MV_spaceman = m_mult(CV, MW_spaceman);
-	L_spaceman = m_mult(LV, MW_spaceman);
+	
 
 	MW_quaoar =  trans(2 ,new vec3(0,0,0), quaoar_pos);
 	MV_quaoar = m_mult(CV, MW_quaoar);
+	//MV_quaoar = m_mult(LV, MW_quaoar);
 	
 	MW_kamillis = trans(2 ,new vec3(0,0,0), kamillis_pos);
 	MV_kamillis = m_mult(CV, MW_kamillis);
+	//MV_kamillis = m_mult(LV, MW_kamillis);
+
 
 	MW_pyrona = trans(5 ,new vec3(0,0,0), pyrona_pos);
 	MV_pyrona = m_mult(CV, MW_pyrona);
+	//MV_pyrona = m_mult(LV, MW_pyrona);
 
 	MW_hagaton = trans(2.5 ,new vec3(0,0,0), hagaton_pos);
 	MV_hagaton = m_mult(CV, MW_hagaton);
+	//MV_hagaton = m_mult(LV, MW_hagaton);
 
 	MW_ophin = trans(5 ,new vec3(0,0,0), ophin_pos);
 	MV_ophin = m_mult(CV, MW_ophin);
+	//MV_ophin = m_mult(LV, MW_ophin);
 
 	MW_hal = trans(5, new vec3(0,0,0), hal_pos);
 	MV_hal = m_mult(CV, MW_hal);
-	L_hal = m_mult(LV, MW_hal);
-
 }
+
 
 function image_loader(image_id, mesh, texture_unit)
 {
@@ -155,6 +168,8 @@ function image_loader(image_id, mesh, texture_unit)
 	{
 		mesh.set_texture(img, texture_unit);
 		DrawScene();
+
+		console.log("drawing");
 	});  
 	 	
 }
@@ -162,9 +177,22 @@ function image_loader(image_id, mesh, texture_unit)
 
 function DrawScene()
 {
-	gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
-	gl.clearColor(0.9,0.9,0.9,1);
-	
+	//ShadowMapDraw();
+	DrawSkybox();
+	ObjectsDraw();
+}
+
+function DrawSkybox()
+{
+	var perspectiveMatrix = ProjectionMatrix();
+	skybox.draw(m_mult(perspectiveMatrix, m_mult(CV, trans(100))));
+}
+
+function ObjectsDraw()
+{
+	gl.enable(gl.DEPTH_TEST);
+	gl.clearColor(0,0,0,1);
+
 	var perspectiveMatrix = ProjectionMatrix();
 	
 	quaoar.set_light(calculate_dir(pyrona_pos, quaoar_pos), 500);
@@ -174,13 +202,11 @@ function DrawScene()
 	hal.set_light(calculate_dir(pyrona_pos, hal_pos), 500);
 	spaceman.set_light(calculate_dir(pyrona_pos, spaceman_pos), 1000);
 
-
-	skybox.draw(m_mult(perspectiveMatrix, m_mult(CV, trans(100))));
-	spaceman.draw_shadow(m_mult(perspectiveMatrix,L_spaceman), L_spaceman, m_mult(perspectiveMatrix, MV_spaceman), MW_spaceman, normal_transformation_matrix(MW_spaceman));
+	spaceman.draw(m_mult(perspectiveMatrix, MV_spaceman), MW_spaceman, normal_transformation_matrix(MW_spaceman));
 	quaoar.draw(m_mult(perspectiveMatrix, MV_quaoar), MW_quaoar, normal_transformation_matrix(MW_quaoar));
 	kamillis.draw(m_mult(perspectiveMatrix, MV_kamillis), MW_kamillis, normal_transformation_matrix(MW_kamillis));
 	pyrona.draw(m_mult(perspectiveMatrix, MV_pyrona), MW_pyrona, normal_transformation_matrix(MW_pyrona));
 	hagaton.draw(m_mult(perspectiveMatrix, MV_hagaton), MW_hagaton, normal_transformation_matrix(MW_hagaton));
 	ophin.draw(m_mult(perspectiveMatrix, MV_ophin), MW_ophin, normal_transformation_matrix(MW_ophin));
-	hal.draw_shadow(m_mult(perspectiveMatrix, L_hal), L_hal, m_mult(perspectiveMatrix, MV_hal), MW_hal, normal_transformation_matrix(MW_hal));
+	hal.draw(m_mult(perspectiveMatrix, MV_hal), MW_hal, normal_transformation_matrix(MW_hal));
 }

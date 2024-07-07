@@ -7,8 +7,7 @@ var viewRotZ;
 canvas_zoom = function( s ) 
 {
 	camera_position.z *= s/canvas.height + 1;
-
-    if(camera_position.z < -10) camera_position.z = -10;
+    //if(camera_position.z < -10) camera_position.z = -10;
 
 	UpdateViewMatrices();
     UpdateTransformations();
@@ -65,6 +64,8 @@ document.addEventListener("DOMContentLoaded", function()
 function WindowResize()
 {
 	UpdateCanvasSize();
+    UpdateTransformations();
+    ShadowMapSet();
 	DrawScene();
 }
 
