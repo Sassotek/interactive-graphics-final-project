@@ -404,6 +404,7 @@ class spaceman_drawer
         
         gl.uniform1i(this.sampler, texture_unit);
         gl.uniform1i(this.texture_set, true);
+        console.log(gl.getUniform(this.prog, this.texture_set));
         console.log("texture_set");
     }
 
@@ -525,7 +526,6 @@ class planet_drawer
     set_texture(img , texture_unit)
     {
         gl.activeTexture(gl.TEXTURE0 + texture_unit);
-        //console.log(gl.getUniform(this.prog, this.sampler));
         gl.useProgram(this.prog);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
@@ -537,9 +537,9 @@ class planet_drawer
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR );
         
+
         gl.uniform1i(this.sampler, texture_unit);
-        gl.uniform1i(this.texture_set, true);
-        console.log("texture_set");
+        gl.uniform1i(this.texture_set, true);        
     }
 
 
@@ -812,7 +812,6 @@ var mainFragmentShaderText = `
     precision mediump float;
 
     uniform sampler2D sampler;
-    //uniform sampler2D depth_sampler;
     uniform samplerCube depth_sampler;
     uniform bool texture_set;
     uniform vec3 light;
@@ -825,16 +824,6 @@ var mainFragmentShaderText = `
     varying vec3 frag_positions;
     varying vec4 light_positions;
 
-    float decodeFloat (vec4 color) 
-    {
-        const vec4 bitShift = vec4(
-            1.0 / (256.0 * 256.0 * 256.0),
-            1.0 / (256.0 * 256.0),
-            1.0 / 256.0,
-            1
-        );
-        return dot(color, bitShift);
-    }
 
     void main()
     {

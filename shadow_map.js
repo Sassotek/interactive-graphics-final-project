@@ -63,6 +63,7 @@ function ShadowMapInit()
 
     shadow_texture = gl.createTexture();
     
+    gl.activeTexture(gl.TEXTURE8);
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, shadow_texture);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);

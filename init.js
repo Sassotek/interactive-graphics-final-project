@@ -32,11 +32,6 @@ function initWebGL()
 		    alert("Unable to initialize WebGL. Your browser or machine may not support it.");
 		    return;
 	    }
-    /*const ext = gl.getExtension('WEBGL_depth_texture');
-    if (!ext) 
-        {
-            console.error('WEBGL_depth_texture extension is not supported.');
-        }*/
 }
 
 function Init()
@@ -168,8 +163,6 @@ function image_loader(image_id, mesh, texture_unit)
 	{
 		mesh.set_texture(img, texture_unit);
 		DrawScene();
-
-		console.log("drawing");
 	});  
 	 	
 }
@@ -177,7 +170,9 @@ function image_loader(image_id, mesh, texture_unit)
 
 function DrawScene()
 {
-	//ShadowMapDraw();
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	gl.clearColor(0.9, 0.9, 0.9, 1);
+	ShadowMapDraw();
 	DrawSkybox();
 	ObjectsDraw();
 }
