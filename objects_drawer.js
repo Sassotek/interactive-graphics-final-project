@@ -333,13 +333,6 @@ class spaceman_drawer
 
         this.use_shadows = 0;
 
-        this.l_prog = program_init(shadow_vs, shadow_fs);
-        gl.useProgram(this.l_prog);
-        this.lmv = gl.getUniformLocation(this.l_prog,'lmv');
-        this.lmvp = gl.getUniformLocation(this.l_prog, 'lmvp');
-        this.l_pos = gl.getAttribLocation(this.l_prog, 'l_pos');
-        
-
         this.VertexShaderText = mainVertexShaderText;
         this.FragmentShaderText = mainFragmentShaderText;
         
@@ -356,9 +349,9 @@ class spaceman_drawer
         this.tex_coord = gl.getAttribLocation(this.prog, 'tex_coord');
         this.normals = gl.getAttribLocation(this.prog, 'normals');
         this.mvp = gl.getUniformLocation(this.prog, 'mvp');
-        this.mv = gl.getUniformLocation(this.prog, 'mv');
+        this.mw = gl.getUniformLocation(this.prog, 'mw');
         this.ntm = gl.getUniformLocation(this.prog, 'ntm');
-        this.l_mvp = gl.getUniformLocation(this.prog, 'l_mvp');
+        this.lmv = gl.getUniformLocation(this.prog, 'lmv');
 
         this.depth_sampler = gl.getUniformLocation(this.prog, 'depth_sampler');
         this.sampler = gl.getUniformLocation(this.prog, 'sampler');
@@ -404,8 +397,7 @@ class spaceman_drawer
         
         gl.uniform1i(this.sampler, texture_unit);
         gl.uniform1i(this.texture_set, true);
-        console.log(gl.getUniform(this.prog, this.texture_set));
-        console.log("texture_set");
+        //console.log("texture_set");
     }
 
 
@@ -417,29 +409,7 @@ class spaceman_drawer
         gl.uniform1i(this.light_set, true);
     }
 
-    draw_shadow(l_p, l_v)
-    {
-        if(this.use_shadows)
-            {
-                gl.useProgram(shadowmap_program);
-                this.num_triangles = this.vertices.length / 3;
-
-                gl.uniformMatrix4fv(lmvp, false, l_p);
-                gl.uniformMatrix4fv(lmv, false, l_v);
-
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-                gl.vertexAttribPointer(l_pos, 3, gl.FLOAT, gl.FALSE, 0 ,0);
-                gl.enableVertexAttribArray(l_pos);
-
-                gl.drawArrays(gl.TRIANGLES, 0, this.num_triangles);
-                
-                gl.useProgram(this.prog);
-                gl.uniformMatrix4fv(this.l_mvp, false, l_p);
-                gl.uniform1i(this.shadows_set, true);
-            }
-    }
-
-    draw(m_p, m_w, n_w)
+    draw(m_p, m_w, n_w, l_v)
     {    
         gl.useProgram(this.prog);
         this.num_triangles = this.vertices.length / 3;
@@ -447,6 +417,7 @@ class spaceman_drawer
         gl.uniformMatrix4fv(this.mvp, false, m_p);
         gl.uniformMatrix4fv(this.mv, false, m_w);
         gl.uniformMatrix3fv(this.ntm, false, n_w);
+        gl.uniformMatrix4fv(this.lmv, false, l_v);
         
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.vertexAttribPointer(this.pos, 3, gl.FLOAT, gl.FALSE, 0 ,0);
@@ -492,9 +463,9 @@ class planet_drawer
         this.tex_coord = gl.getAttribLocation(this.prog, 'tex_coord');
         this.normals = gl.getAttribLocation(this.prog, 'normals');
         this.mvp = gl.getUniformLocation(this.prog, 'mvp');
-        this.mv = gl.getUniformLocation(this.prog, 'mv');
+        this.mw = gl.getUniformLocation(this.prog, 'mw');
         this.ntm = gl.getUniformLocation(this.prog, 'ntm');
-        this.l_mvp = gl.getUniformLocation(this.prog, 'l_mvp');
+        this.lmv = gl.getUniformLocation(this.prog, 'lmv');
 
         this.depth_sampler = gl.getUniformLocation(this.prog, 'depth_sampler');
         this.sampler = gl.getUniformLocation(this.prog, 'sampler');
@@ -526,6 +497,7 @@ class planet_drawer
     set_texture(img , texture_unit)
     {
         gl.activeTexture(gl.TEXTURE0 + texture_unit);
+        //console.log(gl.getUniform(this.prog, this.sampler));
         gl.useProgram(this.prog);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
@@ -537,9 +509,9 @@ class planet_drawer
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR );
         
-
         gl.uniform1i(this.sampler, texture_unit);
-        gl.uniform1i(this.texture_set, true);        
+        gl.uniform1i(this.texture_set, true);
+        //console.log("texture_set");
     }
 
 
@@ -551,38 +523,16 @@ class planet_drawer
         gl.uniform1i(this.light_set, true);
     }
 
-    draw_shadow(l_p, l_v)
-    {
-        if(this.use_shadows)
-            {
-                gl.useProgram(shadowmap_program);
-                this.num_triangles = this.vertices.length / 3;
 
-                gl.uniformMatrix4fv(lmvp, false, l_p);
-                gl.uniformMatrix4fv(lmv, false, l_v);
-
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-                gl.vertexAttribPointer(l_pos, 3, gl.FLOAT, gl.FALSE, 0, 0);
-                gl.enableVertexAttribArray(l_pos);
-
-                gl.drawArrays(gl.TRIANGLES, 0, this.num_triangles);
-                
-                gl.useProgram(this.prog);
-                gl.uniformMatrix4fv(this.l_mvp, false, l_p);
-                gl.uniform1i(this.shadows_set, true);
-            }
-    }
-
-    
-
-    draw(m_p, m_w, n_w)
+    draw(m_p, m_w, n_w, l_v)
     {    
         gl.useProgram(this.prog);
         this.num_triangles = this.vertices.length / 3;
     
         gl.uniformMatrix4fv(this.mvp, false, m_p);
-        gl.uniformMatrix4fv(this.mv, false, m_w);
+        gl.uniformMatrix4fv(this.mw, false, m_w);
         gl.uniformMatrix3fv(this.ntm, false, n_w);
+        gl.uniformMatrix4fv(this.lmv, false, l_v);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.vertexAttribPointer(this.pos, 3, gl.FLOAT, gl.FALSE, 0 ,0);
@@ -785,9 +735,9 @@ var mainVertexShaderText = `
     precision mediump float;
 
     uniform mat4 mvp;
-    uniform mat4 mv;
+    uniform mat4 mw;
     uniform mat3 ntm;
-    uniform mat4 l_mvp; 
+    uniform mat4 lmv;
 
     attribute vec3 pos;
     attribute vec2 tex_coord;
@@ -796,14 +746,14 @@ var mainVertexShaderText = `
     varying vec2 v_tex_coord;
     varying vec3 frag_normals;
     varying vec3 frag_positions;
-    varying vec4 light_positions;
+    varying vec3 frag_light;
 
     void main()
     {
         gl_Position = mvp*vec4(pos,1);
-        frag_positions = vec3(mv*vec4(pos,1));
+        frag_positions = vec3(mw*vec4(pos,1.0));
         frag_normals = normalize(ntm*normals);
-        light_positions = l_mvp*vec4(pos,1);
+        frag_light = vec3(lmv*vec4(pos,1.0));
         v_tex_coord = tex_coord;
     }
 `;
@@ -812,18 +762,20 @@ var mainFragmentShaderText = `
     precision mediump float;
 
     uniform sampler2D sampler;
+    //uniform sampler2D depth_sampler;
     uniform samplerCube depth_sampler;
     uniform bool texture_set;
     uniform vec3 light;
     uniform float alpha;
     uniform bool light_set;
+
     uniform bool shadows_set;
 
     varying vec2 v_tex_coord;
     varying vec3 frag_normals;
     varying vec3 frag_positions;
-    varying vec4 light_positions;
-
+    varying vec3 frag_light;
+    
 
     void main()
     {
@@ -831,9 +783,7 @@ var mainFragmentShaderText = `
         float increment = 2.0;
         float K_diffuse;
         float K_specular;
-        vec3 frag_depth = light_positions.xyz;
-        float acne_remover = 0.007;
-        frag_depth -= acne_remover;
+        
 
         if(light_set)
         {
@@ -850,7 +800,9 @@ var mainFragmentShaderText = `
         if(texture_set)
         {
             if(light_set)
-            {
+            {   
+                //float color = (length(frag_light) - 0.1)/(100.0- 0.1);
+                //gl_FragColor = vec4(vec3(color), 1.0);
                 vec4 tex_color = texture2D(sampler, v_tex_coord);
                 vec3 color = intensity*(K_diffuse*tex_color.rgb + K_specular*vec3(1.0, 1.0, 1.0)); 
                 gl_FragColor = vec4(color, 1.0);

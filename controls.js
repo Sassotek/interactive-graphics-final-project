@@ -11,7 +11,6 @@ canvas_zoom = function( s )
 
 	UpdateViewMatrices();
     UpdateTransformations();
-    ShadowMapSet();
 	DrawScene();
 }
 
@@ -44,7 +43,6 @@ function eventHandler(event)
                     cy = event.clientY;
                     UpdateViewMatrices();
                     UpdateTransformations();
-                    ShadowMapSet();
                     DrawScene();
                 }
             break;
@@ -65,7 +63,6 @@ function WindowResize()
 {
 	UpdateCanvasSize();
     UpdateTransformations();
-    ShadowMapSet();
 	DrawScene();
 }
 
