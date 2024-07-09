@@ -1,7 +1,7 @@
-var canvas, gl;
-var cam_z = 5;
+var canvas, gl, ext;
+var cam_z = 20;
 var camera_position = new vec3(0,0,-cam_z);
-var camera_angle = new vec3(45,-45,0);
+var camera_angle = new vec3(20,-45,0);
 camera_angle.mult(deg2rad);
 
 var light_position;
@@ -39,6 +39,13 @@ function initWebGL()
 		    alert("Unable to initialize WebGL. Your browser or machine may not support it.");
 		    return;
 	    }
+	
+	ext = gl.getExtension('WEBGL_depth_texture');
+	if(!ext)
+		{
+			alert("Unable to initialize WebGL_depth_texture. Your browser or machine may not support it.");
+		    return;
+		}
 }
 
 function Init()
@@ -209,11 +216,11 @@ function ObjectsDraw()
 	hal.set_light(calculate_dir(pyrona_pos, hal_pos), 500);
 	spaceman.set_light(calculate_dir(pyrona_pos, spaceman_pos), 1000);
 
-	spaceman.draw(m_mult(perspectiveMatrix, MV_spaceman), MW_spaceman, normal_transformation_matrix(MW_spaceman), m_mult(LVs[2], MW_spaceman));
-	quaoar.draw(m_mult(perspectiveMatrix, MV_quaoar), MW_quaoar, normal_transformation_matrix(MW_quaoar), m_mult(LVs[2],MW_quaoar));
-	kamillis.draw(m_mult(perspectiveMatrix, MV_kamillis), MW_kamillis, normal_transformation_matrix(MW_kamillis), m_mult(LVs[2], MW_kamillis));
-	pyrona.draw(m_mult(perspectiveMatrix, MV_pyrona), MW_pyrona, normal_transformation_matrix(MW_pyrona), m_mult (LVs[2], MW_pyrona));
-	hagaton.draw(m_mult(perspectiveMatrix, MV_hagaton), MW_hagaton, normal_transformation_matrix(MW_hagaton), m_mult(LVs[2], MW_hagaton));
-	ophin.draw(m_mult(perspectiveMatrix, MV_ophin), MW_ophin, normal_transformation_matrix(MW_ophin), m_mult(LVs[2], MW_ophin));
-	hal.draw(m_mult(perspectiveMatrix, MV_hal), MW_hal, normal_transformation_matrix(MW_hal), m_mult(LVs[2], MW_hal));
+	spaceman.draw(m_mult(perspectiveMatrix, MV_spaceman), MW_spaceman, normal_transformation_matrix(MW_spaceman));
+	quaoar.draw(m_mult(perspectiveMatrix, MV_quaoar), MW_quaoar, normal_transformation_matrix(MW_quaoar));
+	kamillis.draw(m_mult(perspectiveMatrix, MV_kamillis), MW_kamillis, normal_transformation_matrix(MW_kamillis));
+	pyrona.draw(m_mult(perspectiveMatrix, MV_pyrona), MW_pyrona, normal_transformation_matrix(MW_pyrona));
+	hagaton.draw(m_mult(perspectiveMatrix, MV_hagaton), MW_hagaton, normal_transformation_matrix(MW_hagaton));
+	ophin.draw(m_mult(perspectiveMatrix, MV_ophin), MW_ophin, normal_transformation_matrix(MW_ophin));
+	hal.draw(m_mult(perspectiveMatrix, MV_hal), MW_hal, normal_transformation_matrix(MW_hal));
 }

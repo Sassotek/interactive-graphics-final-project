@@ -531,7 +531,7 @@ class planet_drawer
     }
 
 
-    draw(m_p, m_w, n_w, l_v)
+    draw(m_p, m_w, n_w)
     {    
         gl.useProgram(this.prog);
         this.num_triangles = this.vertices.length / 3;
@@ -776,7 +776,6 @@ var mainFragmentShaderText = `
     precision mediump float;
 
     uniform sampler2D sampler;
-    //uniform sampler2D depth_sampler;
     uniform samplerCube depth_sampler;
     uniform bool texture_set;
     uniform vec3 light;
@@ -797,7 +796,20 @@ var mainFragmentShaderText = `
         float increment = 2.0;
         float K_diffuse;
         float K_specular;
+
+        //vec3 v_color;
+        float color;
         
+        if(shadows_set)
+        {
+            vec3 toLight = normalize(frag_light);
+            float shadowmap_value = textureCube(depth_sampler, toLight).r;
+            float light2frag = (length(frag_light) - 0.1)/(100.0 - 0.1);
+
+            //v_color = normalize(frag_light);
+            color = shadowmap_value;
+            
+        }
 
         if(light_set)
         {
@@ -816,10 +828,10 @@ var mainFragmentShaderText = `
             if(light_set)
             {   
                 //float color = (length(frag_light) - 0.1)/(100.0- 0.1);
-                //gl_FragColor = vec4(vec3(color), 1.0);
-                vec4 tex_color = texture2D(sampler, v_tex_coord);
-                vec3 color = intensity*(K_diffuse*tex_color.rgb + K_specular*vec3(1.0, 1.0, 1.0)); 
-                gl_FragColor = vec4(color, 1.0);
+                gl_FragColor = vec4(vec3(color), 1.0);
+                //vec4 tex_color = texture2D(sampler, v_tex_coord);
+                //vec3 color = intensity*(K_diffuse*tex_color.rgb + K_specular*vec3(1.0, 1.0, 1.0)); 
+                //gl_FragColor = vec4(color, 1.0);
             }
             else
             {

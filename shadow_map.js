@@ -49,27 +49,25 @@ function ShadowMapInit()
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, shadow_texture);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    //gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    //gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     for(var i = 0; i<6; i++)
         {
             gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl.RGBA, 512, 512, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         }
-   
+        
+    shadow_depthbuffer = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, shadow_depthbuffer);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 512, 512);
 
     for(var i = 0; i<6; i++)
         {
             shadow_framebuffers[i] = gl.createFramebuffer();
             gl.bindFramebuffer(gl.FRAMEBUFFER, shadow_framebuffers[i]);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, shadow_texture, 0);
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, shadow_depthbuffer);
         }
 
-    shadow_depthbuffer = gl.createRenderbuffer();
-    gl.bindRenderbuffer(gl.RENDERBUFFER, shadow_depthbuffer);
-    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 512, 512);
-
-            //gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, shadow_texture, 0);
-            //gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, shadow_depthbuffer);
-    
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
@@ -77,7 +75,6 @@ function ShadowMapInit()
     objs.forEach(object => {
         gl.useProgram(object.prog);
         object.use_shadows = 1;
-        gl.uniform1i(object.depth_sampler, 0);
     });
 
     console.log("shadowmap_init");
@@ -101,7 +98,7 @@ function ShadowMapDraw() //draw shadowed objects
             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, shadow_texture, 0);
             gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, shadow_depthbuffer);
 
-            gl.clearColor(1, 1, 1, 1);
+            gl.clearColor(0.0, 0.0, 0.0, 1);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
             //draw objects
@@ -112,10 +109,11 @@ function ShadowMapDraw() //draw shadowed objects
                     light_MV = m_mult(LVs[i], MWs[j]);
                     gl.uniformMatrix4fv(ml, false, light_MV);
                     gl.uniformMatrix4fv(mlp, false, m_mult(projection, light_MV));
-                    
+                    var num_triangles = objs[j].vertices.length / 3;
                     gl.bindBuffer(gl.ARRAY_BUFFER, objs[j].vertexBuffer);
                     gl.vertexAttribPointer(l_pos, 3, gl.FLOAT, gl.FALSE, 0, 0);
 		            gl.enableVertexAttribArray(l_pos);
+                    gl.drawArrays(gl.TRIANGLES, 0, num_triangles);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
                 }
 
