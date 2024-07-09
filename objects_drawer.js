@@ -283,12 +283,19 @@ class cube_drawer
                     gl_FragColor = f_clr;
                 }      
             ` 
-        this.prog = program_init(VertexShaderText, FragmentShaderText);
+        //this.prog = program_init(VertexShaderText, FragmentShaderText);
+        this.prog = program_init(shadow_vs, shadow_fs);
         gl.useProgram(this.prog);
 
+        /*
         this.pos = gl.getAttribLocation(prog, 'pos');
         this.clr = gl.getAttribLocation(prog, 'clr');
         this.mvp = gl.getUniformLocation(prog, 'mvp');
+        */
+
+        this.l_pos = gl.getAttribLocation(this.prog, 'l_pos');
+        this.mlp = gl.getUniformLocation(this.prog, 'mlp');
+        this.mlv = gl.getUniformLocation(this.prog, 'mlv');
 
         this.vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -301,20 +308,21 @@ class cube_drawer
     }
 
 
-    draw(v_w)
+    draw(mlp, mlv)
     {
         this.num_triangles = this.vertices.length / 3;
         gl.useProgram(this.prog);
     
-        gl.uniformMatrix4fv(this.mvp, false, v_w);
+        gl.uniformMatrix4fv(this.mlp, false, mlp);
+        gl.uniformMatrix4fv(this.mlv, false, mlv);
         
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.vertexAttribPointer(this.pos, 3, gl.FLOAT, gl.FALSE , 3* Float32Array.BYTES_PER_ELEMENT , 0);
-        gl.enableVertexAttribArray(this.pos);
+        gl.enableVertexAttribArray(this.l_pos);
   
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
-        gl.vertexAttribPointer(this.clr, 4, gl.FLOAT, gl.FALSE, 4* Float32Array.BYTES_PER_ELEMENT, 0);
-        gl.enableVertexAttribArray(this.clr);
+        //gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+        //gl.vertexAttribPointer(this.clr, 4, gl.FLOAT, gl.FALSE, 4* Float32Array.BYTES_PER_ELEMENT, 0);
+        //gl.enableVertexAttribArray(this.clr);
 
         gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length/3);
        
@@ -762,12 +770,19 @@ var mainVertexShaderText = `
     varying vec3 frag_positions;
     varying vec3 frag_light;
 
+    mat4 depth_bias = mat4(
+    0.5, 0.0, 0.0, 0.0,
+    0.0, 0.5, 0.0, 0.0,
+    0.0, 0.0, 0.5, 0.0,
+    0.5, 0.5, 0.5, 1.0
+    );
+
     void main()
     {
         gl_Position = mvp*vec4(pos,1);
         frag_positions = vec3(mw*vec4(pos,1.0));
         frag_normals = normalize(ntm*normals);
-        frag_light = vec3(lmv*vec4(pos,1.0));
+        frag_light = vec3(depth_bias*lmv*vec4(pos,1.0));
         v_tex_coord = tex_coord;
     }
 `;
@@ -788,7 +803,6 @@ var mainFragmentShaderText = `
     varying vec3 frag_normals;
     varying vec3 frag_positions;
     varying vec3 frag_light;
-    
 
     void main()
     {
@@ -800,13 +814,14 @@ var mainFragmentShaderText = `
         //vec3 v_color;
         float color;
         
+        
         if(shadows_set)
         {
             vec3 toLight = normalize(frag_light);
             float shadowmap_value = textureCube(depth_sampler, toLight).r;
             float light2frag = (length(frag_light) - 0.1)/(100.0 - 0.1);
 
-            //v_color = normalize(frag_light);
+            //v_color = shadowmap_value;
             color = shadowmap_value;
             
         }

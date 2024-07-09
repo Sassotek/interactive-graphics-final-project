@@ -12,7 +12,7 @@ light_angles.forEach(vec =>{
 })
 var CV, LV, MVP1, MW_quaoar, MV_quaoar, MW_kamillis, MV_kamillis, MW_pyrona, MV_pyrona, MW_hagaton, MV_hagaton, MW_ophin, MV_ophin, MW_hal, MV_hal, MW_spaceman, MV_spaceman; // view matrices
 var LVs;
-var cube, skybox, quaoar, kamillis, pyrona, hagaton, ophin, hal, spaceman;
+var cube1, cube2, skybox, quaoar, kamillis, pyrona, hagaton, ophin, hal, spaceman;
 
 var axys = 4.75;
 
@@ -39,13 +39,6 @@ function initWebGL()
 		    alert("Unable to initialize WebGL. Your browser or machine may not support it.");
 		    return;
 	    }
-	
-	ext = gl.getExtension('WEBGL_depth_texture');
-	if(!ext)
-		{
-			alert("Unable to initialize WebGL_depth_texture. Your browser or machine may not support it.");
-		    return;
-		}
 }
 
 function Init()
@@ -61,7 +54,8 @@ function Init()
 	gl.enable(gl.DEPTH_TEST);
 	
 	// Initialize the programs and buffers for drawing
-	cube = new cube_drawer();
+	cube1 = new cube_drawer();
+	cube2 = new cube_drawer();
 	//skybox = new skybox_drawer();
 
 	spaceman = new spaceman_drawer()
@@ -184,9 +178,9 @@ function DrawScene()
 {
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	gl.clearColor(0.9, 0.9, 0.9, 1);
-	ShadowMapDraw();
 	//DrawSkybox();
 	//DrawTestCube();
+	ShadowMapDraw();
 	ObjectsDraw();
 }
 
@@ -198,8 +192,22 @@ function DrawSkybox()
 
 function DrawTestCube()
 {
+	gl.clearColor(0.0, 0.0, 0.05, 1);
+	var cube_pos1 = new vec3(26,-axys,0);
+	var cube_pos2 = new vec3(20,-axys, 4);
 	var pers = ProjectionMatrix();
-	cube.draw(m_mult(pers, CV));
+
+	var cube1_MW = trans(1, new vec3(0,0,0), cube_pos1);
+	var cube2_MW = trans(1, new vec3(0,0,0), cube_pos2);
+
+	var L = LVs[1];
+	//var L = CV;
+
+	var cube1_MV = m_mult(L, cube1_MW);
+	var cube2_MV = m_mult(L, cube2_MW);
+
+	cube1.draw(m_mult(pers, cube1_MV), cube1_MV); 
+	cube2.draw(m_mult(pers, cube2_MV), cube2_MV)
 }
 
 function ObjectsDraw()

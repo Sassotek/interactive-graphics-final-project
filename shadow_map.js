@@ -1,7 +1,8 @@
 var shadowmap_program;
 var l_pos, ml, mlp, light_p;
-var shadow_texture, shadow_depthbuffer; 
+var shadow_texture; 
 var shadow_framebuffers = [];
+var shadow_depthbuffers = [];
 var light_MV;
 
 var MWs = [MW_quaoar, MW_kamillis, MW_hagaton, MW_ophin, MW_hal, MW_spaceman];
@@ -27,10 +28,19 @@ shadow_fs = `
 
     varying vec3 frag_light;
     
+    float non_linear_depth;
+    float linear_depth;
+    float depth;
+
     void main()
     {
-        float color = (length(frag_light) - 0.1)/(100.0 - 0.1);
-        gl_FragColor = vec4(vec3(color), 1.0);
+        non_linear_depth = gl_FragCoord.z;
+        linear_depth = (2.0*0.1*100.0)/(100.0+0.1 - non_linear_depth*(100.0-0.1));
+        depth = (linear_depth - 0.1)/(100.0 - 0.1);
+        gl_FragColor = vec4(vec3(depth), 1.0);
+
+        //float color = length(frag_light);
+        //gl_FragColor = vec4(1,0,0,1);
     }
 `;
 
@@ -49,8 +59,8 @@ function ShadowMapInit()
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, shadow_texture);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    //gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    //gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
     for(var i = 0; i<6; i++)
         {
             gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl.RGBA, 512, 512, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
@@ -124,6 +134,7 @@ function ShadowMapDraw() //draw shadowed objects
 
     for(var x=0; x<objs.length; x++)
         {
+            var projection = ProjectionMatrix();
             gl.useProgram(objs[x].prog);
             gl.uniformMatrix4fv(objs[x].lmv, false, light_MV);
         }
