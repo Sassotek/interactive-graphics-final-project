@@ -409,15 +409,22 @@ class spaceman_drawer
         gl.uniform1i(this.light_set, true);
     }
 
-    draw(m_p, m_w, n_w, l_v)
+    draw(m_p, m_w, n_w)
     {    
         gl.useProgram(this.prog);
         this.num_triangles = this.vertices.length / 3;
+
+        if(this.use_shadows)
+            {
+                gl.uniform1i(this.depth_sampler, 0);
+                gl.activeTexture(gl.TEXTURE0);
+                gl.bindTexture(gl.TEXTURE_CUBE_MAP, shadow_texture);
+                gl.uniform1i(this.shadows_set, 1);
+            }
         
         gl.uniformMatrix4fv(this.mvp, false, m_p);
         gl.uniformMatrix4fv(this.mv, false, m_w);
         gl.uniformMatrix3fv(this.ntm, false, n_w);
-        gl.uniformMatrix4fv(this.lmv, false, l_v);
         
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.vertexAttribPointer(this.pos, 3, gl.FLOAT, gl.FALSE, 0 ,0);
@@ -528,11 +535,18 @@ class planet_drawer
     {    
         gl.useProgram(this.prog);
         this.num_triangles = this.vertices.length / 3;
+
+        if(this.use_shadows)
+            {
+                gl.uniform1i(this.depth_sampler, 0);
+                gl.activeTexture(gl.TEXTURE0);
+                gl.bindTexture(gl.TEXTURE_CUBE_MAP, shadow_texture);
+                gl.uniform1i(this.shadows_set, 1);
+            }
     
         gl.uniformMatrix4fv(this.mvp, false, m_p);
         gl.uniformMatrix4fv(this.mw, false, m_w);
         gl.uniformMatrix3fv(this.ntm, false, n_w);
-        gl.uniformMatrix4fv(this.lmv, false, l_v);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.vertexAttribPointer(this.pos, 3, gl.FLOAT, gl.FALSE, 0 ,0);

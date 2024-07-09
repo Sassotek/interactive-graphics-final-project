@@ -4,6 +4,8 @@ var shadow_texture, shadow_depthbuffer;
 var shadow_framebuffers = [];
 var light_MV;
 
+var MWs = [MW_quaoar, MW_kamillis, MW_hagaton, MW_ophin, MW_hal, MW_spaceman];
+var objs = [quaoar, kamillis, hagaton, ophin, hal, spaceman];
 shadow_vs = `
     precision mediump float;
 
@@ -53,26 +55,26 @@ function ShadowMapInit()
         {
             gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl.RGBA, 512, 512, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         }
-    gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
-
-    shadow_depthbuffer = gl.createRenderbuffer();
+   
 
     for(var i = 0; i<6; i++)
         {
             shadow_framebuffers[i] = gl.createFramebuffer();
             gl.bindFramebuffer(gl.FRAMEBUFFER, shadow_framebuffers[i]);
-            
-            gl.bindRenderbuffer(gl.RENDERBUFFER, shadow_depthbuffer);
-            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 512, 512);
-
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, shadow_texture, 0);
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, shadow_depthbuffer);
         }
+
+    shadow_depthbuffer = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, shadow_depthbuffer);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 512, 512);
+
+            //gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, shadow_texture, 0);
+            //gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, shadow_depthbuffer);
     
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
 
-    [spaceman, hal, ophin, quaoar, kamillis, hagaton].forEach(object => {
+    objs.forEach(object => {
         gl.useProgram(object.prog);
         object.use_shadows = 1;
         gl.uniform1i(object.depth_sampler, 0);
@@ -103,11 +105,29 @@ function ShadowMapDraw() //draw shadowed objects
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
             //draw objects
-            var projection = ProjectionMatrix(90);
+            var projection = ProjectionMatrix();
+
+            for(var j = 0; j<objs.length; j++)
+                {
+                    light_MV = m_mult(LVs[i], MWs[j]);
+                    gl.uniformMatrix4fv(ml, false, light_MV);
+                    gl.uniformMatrix4fv(mlp, false, m_mult(projection, light_MV));
+                    
+                    gl.bindBuffer(gl.ARRAY_BUFFER, objs[j].vertexBuffer);
+                    gl.vertexAttribPointer(l_pos, 3, gl.FLOAT, gl.FALSE, 0, 0);
+		            gl.enableVertexAttribArray(l_pos);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+                }
 
 
             gl.bindRenderbuffer(gl.RENDERBUFFER, null);
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        }
+
+    for(var x=0; x<objs.length; x++)
+        {
+            gl.useProgram(objs[x].prog);
+            gl.uniformMatrix4fv(objs[x].lmv, false, light_MV);
         }
 
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);

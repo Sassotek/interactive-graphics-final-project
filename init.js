@@ -49,7 +49,6 @@ function Init()
 	
 	initWebGL();
 	
-
 	// Initialize settings
 	gl.clearColor(0.9,0.9,0.9,1);
 	gl.enable(gl.DEPTH_TEST);
@@ -65,6 +64,8 @@ function Init()
 	hagaton = new planet_drawer();
 	ophin = new planet_drawer();
 	hal = new planet_drawer();
+
+	objs = [quaoar, kamillis, hagaton, ophin, hal, spaceman];
 
 	image_loader("http://0.0.0.0:8000/quaoar_texture.png", quaoar, 1);
 	image_loader("http://0.0.0.0:8000/kamillis_texture.png", kamillis, 2);
@@ -134,31 +135,26 @@ function UpdateTransformations()
 
 	MW_spaceman = trans(0.2, spaceman_rot, spaceman_pos);
 	MV_spaceman = m_mult(CV, MW_spaceman);
-	
 
 	MW_quaoar =  trans(2 ,new vec3(0,0,0), quaoar_pos);
 	MV_quaoar = m_mult(CV, MW_quaoar);
-	//MV_quaoar = m_mult(LV, MW_quaoar);
 	
 	MW_kamillis = trans(2 ,new vec3(0,0,0), kamillis_pos);
 	MV_kamillis = m_mult(CV, MW_kamillis);
-	//MV_kamillis = m_mult(LV, MW_kamillis);
-
 
 	MW_pyrona = trans(5 ,new vec3(0,0,0), pyrona_pos);
 	MV_pyrona = m_mult(CV, MW_pyrona);
-	//MV_pyrona = m_mult(LV, MW_pyrona);
 
 	MW_hagaton = trans(2.5 ,new vec3(0,0,0), hagaton_pos);
 	MV_hagaton = m_mult(CV, MW_hagaton);
-	//MV_hagaton = m_mult(LV, MW_hagaton);
 
 	MW_ophin = trans(5 ,new vec3(0,0,0), ophin_pos);
 	MV_ophin = m_mult(CV, MW_ophin);
-	//MV_ophin = m_mult(LV, MW_ophin);
 
 	MW_hal = trans(5, new vec3(0,0,0), hal_pos);
 	MV_hal = m_mult(CV, MW_hal);
+
+	MWs = [MW_quaoar, MW_kamillis, MW_hagaton, MW_ophin, MW_hal, MW_spaceman];
 }
 
 
