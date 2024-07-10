@@ -294,27 +294,31 @@ class cube_drawer
         */
 
         this.l_pos = gl.getAttribLocation(this.prog, 'l_pos');
-        this.mlp = gl.getUniformLocation(this.prog, 'mlp');
-        this.mlv = gl.getUniformLocation(this.prog, 'mlv');
+        this.mWorld = gl.getUniformLocation(this.prog, 'mw');
+        this.mView = gl.getUniformLocation(this.prog, 'lv');
+        this.mProj = gl.getUniformLocation(this.prog, 'pm');
+        this.pointLightPosition = gl.getUniformLocation(this.prog, 'LightP');
 
         this.vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 
-        this.colorBuffer = gl.createBuffer();
+        /*this.colorBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.colors), gl.STATIC_DRAW);
-
+        */
     }
 
 
-    draw(mlp, mlv)
+    draw(mWorld, mView, mProj, plp)
     {
         this.num_triangles = this.vertices.length / 3;
         gl.useProgram(this.prog);
     
-        gl.uniformMatrix4fv(this.mlp, false, mlp);
-        gl.uniformMatrix4fv(this.mlv, false, mlv);
+        gl.uniformMatrix4fv(this.mWorld, false, mWorld);
+        gl.uniformMatrix4fv(this.mView, false, mView);
+        gl.uniformMatrix4fv(this.mProj, false, mProj);
+        gl.uniform3fv(this.pointLightPosition, plp);
         
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.vertexAttribPointer(this.pos, 3, gl.FLOAT, gl.FALSE , 3* Float32Array.BYTES_PER_ELEMENT , 0);
@@ -359,8 +363,8 @@ class spaceman_drawer
         this.mvp = gl.getUniformLocation(this.prog, 'mvp');
         this.mw = gl.getUniformLocation(this.prog, 'mw');
         this.ntm = gl.getUniformLocation(this.prog, 'ntm');
-        this.lmv = gl.getUniformLocation(this.prog, 'lmv');
 
+        this.LightP = gl.getUniformLocation(this.prog, 'LightP');
         this.depth_sampler = gl.getUniformLocation(this.prog, 'depth_sampler');
         this.sampler = gl.getUniformLocation(this.prog, 'sampler');
         this.texture_set = gl.getUniformLocation(this.prog, 'texture_set');
@@ -480,8 +484,8 @@ class planet_drawer
         this.mvp = gl.getUniformLocation(this.prog, 'mvp');
         this.mw = gl.getUniformLocation(this.prog, 'mw');
         this.ntm = gl.getUniformLocation(this.prog, 'ntm');
-        this.lmv = gl.getUniformLocation(this.prog, 'lmv');
-
+        
+        this.LightP = gl.getUniformLocation(this.prog, 'LightP');
         this.depth_sampler = gl.getUniformLocation(this.prog, 'depth_sampler');
         this.sampler = gl.getUniformLocation(this.prog, 'sampler');
         this.texture_set = gl.getUniformLocation(this.prog, 'texture_set');
@@ -759,7 +763,6 @@ var mainVertexShaderText = `
     uniform mat4 mvp;
     uniform mat4 mw;
     uniform mat3 ntm;
-    uniform mat4 lmv;
 
     attribute vec3 pos;
     attribute vec2 tex_coord;
@@ -768,21 +771,12 @@ var mainVertexShaderText = `
     varying vec2 v_tex_coord;
     varying vec3 frag_normals;
     varying vec3 frag_positions;
-    varying vec3 frag_light;
-
-    mat4 depth_bias = mat4(
-    0.5, 0.0, 0.0, 0.0,
-    0.0, 0.5, 0.0, 0.0,
-    0.0, 0.0, 0.5, 0.0,
-    0.5, 0.5, 0.5, 1.0
-    );
 
     void main()
     {
         gl_Position = mvp*vec4(pos,1);
         frag_positions = vec3(mw*vec4(pos,1.0));
         frag_normals = normalize(ntm*normals);
-        frag_light = vec3(depth_bias*lmv*vec4(pos,1.0));
         v_tex_coord = tex_coord;
     }
 `;
@@ -795,6 +789,7 @@ var mainFragmentShaderText = `
     uniform bool texture_set;
     uniform vec3 light;
     uniform float alpha;
+    uniform vec3 LightP;
     uniform bool light_set;
 
     uniform bool shadows_set;
@@ -802,7 +797,6 @@ var mainFragmentShaderText = `
     varying vec2 v_tex_coord;
     varying vec3 frag_normals;
     varying vec3 frag_positions;
-    varying vec3 frag_light;
 
     void main()
     {
@@ -811,19 +805,30 @@ var mainFragmentShaderText = `
         float K_diffuse;
         float K_specular;
 
+        mat4 b = mat4(1.0, 0.0, 0.0, 0.0,
+                    0.0, 1.0, 0.0, 0.0,
+                    0.0, 0.0, -1.0, 0.0,
+                    0.0, 0.0, 0.0, 1.0); 
+
         //vec3 v_color;
-        float color;
+        float shadowmap_value;
         
         
         if(shadows_set)
         {
-            vec3 toLight = normalize(frag_light);
-            float shadowmap_value = textureCube(depth_sampler, toLight).r;
-            float light2frag = (length(frag_light) - 0.1)/(100.0 - 0.1);
-
-            //v_color = shadowmap_value;
-            color = shadowmap_value;
+            float bias = 0.007;
+            vec3 ToLight = normalize(frag_positions - LightP);
+            ToLight = vec3(b*vec4(ToLight, 1.0));
+            shadowmap_value = textureCube(depth_sampler, ToLight).r;
             
+            vec3 LightToFrag = (frag_positions - LightP);
+
+            float lightFragDist = (length(LightToFrag) -0.1)/(100.0 - 0.1);
+
+            if((shadowmap_value+bias)<= lightFragDist)
+            {
+                intensity = 0.2;
+            }
         }
 
         if(light_set)
@@ -842,11 +847,10 @@ var mainFragmentShaderText = `
         {
             if(light_set)
             {   
-                //float color = (length(frag_light) - 0.1)/(100.0- 0.1);
-                gl_FragColor = vec4(vec3(color), 1.0);
-                //vec4 tex_color = texture2D(sampler, v_tex_coord);
-                //vec3 color = intensity*(K_diffuse*tex_color.rgb + K_specular*vec3(1.0, 1.0, 1.0)); 
-                //gl_FragColor = vec4(color, 1.0);
+                //gl_FragColor = vec4(vec3(color), 1.0);
+                vec4 tex_color = texture2D(sampler, v_tex_coord);
+                vec3 color = intensity*(K_diffuse*tex_color.rgb + K_specular*vec3(1.0, 1.0, 1.0)); 
+                gl_FragColor = vec4(color, 1.0);
             }
             else
             {

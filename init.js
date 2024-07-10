@@ -6,7 +6,7 @@ camera_angle.mult(deg2rad);
 
 var light_position;
 var light_angles = [new vec3(0.0 ,90.0 ,0.0), new vec3(0.0, -90.0, 0.0),  new vec3(-90.0 ,0.0, 0.0), 
-					new vec3(90.0 ,0.0 ,0.0),  new vec3(0.0, 180.0, 0.0), new vec3(0.0, 0.0, 0.0)];
+					new vec3(90.0 ,0.0 ,0.0), new vec3(0.0, 0.0, 0.0), new vec3(0.0, 180.0, 0.0) ];
 light_angles.forEach(vec =>{
 	vec.mult(deg2rad);
 })
@@ -18,17 +18,17 @@ var axys = 4.75;
 
 var quaoar_pos = new vec3(-15,10, 40);
 var kamillis_pos = new vec3(-40,-25,-40);
-var pyrona_pos = new vec3(30,-axys,0);
-var hagaton_pos = new vec3(25,30,-35);
+var pyrona_pos = new vec3(30.0,-axys,0.0);
+var hagaton_pos = new vec3(45,30,-35);
 var ophin_pos = new vec3(0,-axys,0);
-var hal_pos = new vec3(12,-axys, 2);
+var hal_pos = new vec3(12,-axys, 3);
 
-var hal_pos = new vec3(12,-axys, 2);
 var spaceman_pos = new vec3(0, 0, 0);
 //var spaceman_pos = new vec3(36, -5, 0);
 
-
 light_position = new vec3(-pyrona_pos.x, -pyrona_pos.y, -pyrona_pos.z);
+light_position_V = [pyrona_pos.x, pyrona_pos.y, pyrona_pos.z];
+
 
 
 function initWebGL()
@@ -98,9 +98,9 @@ function UpdateCanvasSize()
 	UpdateViewMatrices();
 }
 
-function ProjectionMatrix( fov_angle=60 )
+function ProjectionMatrix(cw = canvas.width, ch = canvas.height, fov_angle=90 )
 {
-	var r = canvas.width / canvas.height;
+	var r = cw / ch;
 	var n = 0.1;
 	var f = 100;
 	var fov = deg2rad * fov_angle;
@@ -192,22 +192,20 @@ function DrawSkybox()
 
 function DrawTestCube()
 {
-	gl.clearColor(0.0, 0.0, 0.05, 1);
-	var cube_pos1 = new vec3(26,-axys,0);
-	var cube_pos2 = new vec3(20,-axys, 4);
+	gl.clearColor(0, 0, 0, 1);
+	var cube_pos1 = new vec3(-35,-axys,-0);
+	var cube_pos2 = new vec3(25,-axys, 4);
 	var pers = ProjectionMatrix();
 
-	var cube1_MW = trans(1, new vec3(0,0,0), cube_pos1);
+	var cube1_MW = trans(10, new vec3(0,0,0), cube_pos1);
 	var cube2_MW = trans(1, new vec3(0,0,0), cube_pos2);
 
 	var L = LVs[1];
 	//var L = CV;
 
-	var cube1_MV = m_mult(L, cube1_MW);
-	var cube2_MV = m_mult(L, cube2_MW);
 
-	cube1.draw(m_mult(pers, cube1_MV), cube1_MV); 
-	cube2.draw(m_mult(pers, cube2_MV), cube2_MV)
+	cube1.draw(cube1_MW, L, pers, light_position_V); 
+	cube2.draw(cube2_MW, L, pers, light_position_V);
 }
 
 function ObjectsDraw()
