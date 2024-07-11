@@ -14,7 +14,7 @@ var b = [
     0.0, 0.0, 0.0, 1.0
 ];
 
-var MWs = [MW_quaoar, MW_kamillis, MW_hagaton, MW_ophin, MW_hal, MW_spaceman];
+
 var objs = [quaoar, kamillis, hagaton, ophin, hal, spaceman];
 
 shadow_vs = `
@@ -30,7 +30,7 @@ shadow_vs = `
 
     void main()
     {
-        fPos = (mw * vec4(l_pos, 1.0)).xyz;
+        fPos = vec3(mw * vec4(l_pos, 1.0));
         gl_Position = pm*lv*vec4(fPos, 1.0);
     }
 `;
@@ -45,12 +45,9 @@ shadow_fs = `
     {
         vec3 LightToFrag = (fPos - LightP);
 
-        float lightFragDist =
-            (length(LightToFrag) - 0.1)
-            /
-            (100.0 - 0.1);
+        float lightFragDist = (length(LightToFrag) - 0.1)/(100.0 - 0.1);
 
-        gl_FragColor = vec4(lightFragDist, lightFragDist, lightFragDist, 1.0);   
+        gl_FragColor = vec4(vec3(lightFragDist), 1.0);   
     }
 `;
 
@@ -126,7 +123,7 @@ function ShadowMapDraw() //draw shadowed objects
             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, shadow_texture, 0);
             gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, shadow_depthbuffer);
 
-            gl.clearColor(0.0, 0.0, 0.0, 1);
+            gl.clearColor(1.0, 1.0, 1.0, 1.0);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
             //draw objects

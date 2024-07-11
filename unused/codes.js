@@ -457,3 +457,23 @@ function trans(scale = 1, dir = vec3(0,0,0), pos = vec3(0,0,0)) //first scale, s
                 }
             }
         }
+
+
+
+
+        if(shadows_set)
+            {
+                float bias = 0.007;
+                vec3 ToLight = normalize(frag_positions - LightP);
+                ToLight = vec3(b*vec4(ToLight, 1.0));
+                shadowmap_value = textureCube(depth_sampler, ToLight).r;
+                
+                vec3 LightToFrag = (frag_positions - LightP);
+    
+                float lightFragDist = (length(LightToFrag) -0.1)/(100.0 - 0.1);
+    
+                if((shadowmap_value+bias)<= lightFragDist)
+                {
+                    intensity = 0.2;
+                }
+            }

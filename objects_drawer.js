@@ -365,6 +365,7 @@ class spaceman_drawer
         this.ntm = gl.getUniformLocation(this.prog, 'ntm');
 
         this.LightP = gl.getUniformLocation(this.prog, 'LightP');
+        this.bias = gl.getUniformLocation(this.prog, 'bias');
         this.depth_sampler = gl.getUniformLocation(this.prog, 'depth_sampler');
         this.sampler = gl.getUniformLocation(this.prog, 'sampler');
         this.texture_set = gl.getUniformLocation(this.prog, 'texture_set');
@@ -419,6 +420,7 @@ class spaceman_drawer
         gl.uniform3f(this.light, vec.x, vec.y, vec.z);
         gl.uniform1f(this.alpha, a);
         gl.uniform1i(this.light_set, true);
+        gl.uniform1f(this.bias, -0.002);
     }
 
     draw(m_p, m_w, n_w)
@@ -435,7 +437,7 @@ class spaceman_drawer
             }
         
         gl.uniformMatrix4fv(this.mvp, false, m_p);
-        gl.uniformMatrix4fv(this.mv, false, m_w);
+        gl.uniformMatrix4fv(this.mw, false, m_w);
         gl.uniformMatrix3fv(this.ntm, false, n_w);
         
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -486,6 +488,7 @@ class planet_drawer
         this.ntm = gl.getUniformLocation(this.prog, 'ntm');
         
         this.LightP = gl.getUniformLocation(this.prog, 'LightP');
+        this.bias = gl.getUniformLocation(this.prog, 'bias');
         this.depth_sampler = gl.getUniformLocation(this.prog, 'depth_sampler');
         this.sampler = gl.getUniformLocation(this.prog, 'sampler');
         this.texture_set = gl.getUniformLocation(this.prog, 'texture_set');
@@ -540,6 +543,7 @@ class planet_drawer
         gl.uniform3f(this.light, vec.x, vec.y, vec.z);
         gl.uniform1f(this.alpha, a);
         gl.uniform1i(this.light_set, true);
+        gl.uniform1f(this.bias, -0.002);
     }
 
 
@@ -763,6 +767,7 @@ var mainVertexShaderText = `
     uniform mat4 mvp;
     uniform mat4 mw;
     uniform mat3 ntm;
+    
 
     attribute vec3 pos;
     attribute vec2 tex_coord;
@@ -791,6 +796,7 @@ var mainFragmentShaderText = `
     uniform float alpha;
     uniform vec3 LightP;
     uniform bool light_set;
+    uniform float bias;
 
     uniform bool shadows_set;
 
@@ -810,26 +816,10 @@ var mainFragmentShaderText = `
                     0.0, 0.0, -1.0, 0.0,
                     0.0, 0.0, 0.0, 1.0); 
 
-        //vec3 v_color;
         float shadowmap_value;
+        float lightFragDist;
         
         
-        if(shadows_set)
-        {
-            float bias = 0.007;
-            vec3 ToLight = normalize(frag_positions - LightP);
-            ToLight = vec3(b*vec4(ToLight, 1.0));
-            shadowmap_value = textureCube(depth_sampler, ToLight).r;
-            
-            vec3 LightToFrag = (frag_positions - LightP);
-
-            float lightFragDist = (length(LightToFrag) -0.1)/(100.0 - 0.1);
-
-            if((shadowmap_value+bias)<= lightFragDist)
-            {
-                intensity = 0.2;
-            }
-        }
 
         if(light_set)
         {
@@ -841,11 +831,48 @@ var mainFragmentShaderText = `
 
             K_diffuse = min(increment*max(dot(omega,n), 0.0), 1.0);
             K_specular = pow(specular, alpha);
+
+            if(shadows_set)
+            {
+                
+                intensity = 0.2;
+                vec3 ToLight = normalize(frag_positions - LightP);
+                ToLight = vec3(b*vec4(ToLight, 1.0));
+                shadowmap_value = textureCube(depth_sampler, ToLight).z;
+                
+                vec3 LightToFrag = (frag_positions - LightP);
+
+                lightFragDist = (length(LightToFrag) - 0.1)/(100.0 - 0.1);
+                
+                //color = lightFragDist;
+
+                
+                vec3 l = normalize(-LightToFrag);
+                float cosTheta = dot(n,l);
+                float i = 0.0;
+
+                if((cosTheta>=0.9) && (cosTheta<=1.0))
+                {
+                    i = 0.01;
+                }
+                
+                if((shadowmap_value+bias+i)>= lightFragDist)
+                {
+                    intensity += 0.8;
+                }
+            }
         }
         
         if(texture_set)
         {
-            if(light_set)
+            if(shadows_set)
+            {
+                vec4 tex_color = texture2D(sampler, v_tex_coord);
+                vec3 color = intensity*(tex_color.rgb); 
+                gl_FragColor = vec4(color, 1.0);
+                //gl_FragColor = vec4(vec3(lightFragDist), 1.0);
+            }
+            else if(light_set)
             {   
                 //gl_FragColor = vec4(vec3(color), 1.0);
                 vec4 tex_color = texture2D(sampler, v_tex_coord);

@@ -21,10 +21,10 @@ var kamillis_pos = new vec3(-40,-25,-40);
 var pyrona_pos = new vec3(30.0,-axys,0.0);
 var hagaton_pos = new vec3(45,30,-35);
 var ophin_pos = new vec3(0,-axys,0);
-var hal_pos = new vec3(12,-axys, 3);
+var hal_pos = new vec3(12,-axys, 3.25);
 
 var spaceman_pos = new vec3(0, 0, 0);
-//var spaceman_pos = new vec3(36, -5, 0);
+
 
 light_position = new vec3(-pyrona_pos.x, -pyrona_pos.y, -pyrona_pos.z);
 light_position_V = [pyrona_pos.x, pyrona_pos.y, pyrona_pos.z];
@@ -109,8 +109,8 @@ function ProjectionMatrix(cw = canvas.width, ch = canvas.height, fov_angle=90 )
 	return [
 		s/r, 0, 0, 0,
 		0, s, 0, 0,
-		0, 0, -(n+f)/(f-n), -1,
-		0, 0, -2*n*f/(f-n), 0
+		0, 0, (n+f)/(n-f), -1,
+		0, 0, 2*n*f/(n-f), 0
 	];
 }
 
@@ -132,8 +132,7 @@ function UpdateViewMatrices()
 function UpdateTransformations()
 {
 	
-	var spaceman_rot = new vec3(0, deg2rad*90,0);
-
+	var spaceman_rot = new vec3(0,90*deg2rad,0);
 	MW_spaceman = trans(0.2, spaceman_rot, spaceman_pos);
 	MV_spaceman = m_mult(CV, MW_spaceman);
 
@@ -211,6 +210,8 @@ function DrawTestCube()
 function ObjectsDraw()
 {
 	gl.enable(gl.DEPTH_TEST);
+	//gl.enable(gl.CULL_FACE);
+
 	gl.clearColor(0.0, 0.0, 0.05, 1);
 
 	var perspectiveMatrix = ProjectionMatrix();
@@ -222,11 +223,11 @@ function ObjectsDraw()
 	hal.set_light(calculate_dir(pyrona_pos, hal_pos), 500);
 	spaceman.set_light(calculate_dir(pyrona_pos, spaceman_pos), 1000);
 
-	spaceman.draw(m_mult(perspectiveMatrix, MV_spaceman), MW_spaceman, normal_transformation_matrix(MW_spaceman));
 	quaoar.draw(m_mult(perspectiveMatrix, MV_quaoar), MW_quaoar, normal_transformation_matrix(MW_quaoar));
 	kamillis.draw(m_mult(perspectiveMatrix, MV_kamillis), MW_kamillis, normal_transformation_matrix(MW_kamillis));
 	pyrona.draw(m_mult(perspectiveMatrix, MV_pyrona), MW_pyrona, normal_transformation_matrix(MW_pyrona));
 	hagaton.draw(m_mult(perspectiveMatrix, MV_hagaton), MW_hagaton, normal_transformation_matrix(MW_hagaton));
 	ophin.draw(m_mult(perspectiveMatrix, MV_ophin), MW_ophin, normal_transformation_matrix(MW_ophin));
 	hal.draw(m_mult(perspectiveMatrix, MV_hal), MW_hal, normal_transformation_matrix(MW_hal));
+	spaceman.draw(m_mult(perspectiveMatrix, MV_spaceman), MWs[5], normal_transformation_matrix(MW_spaceman));
 }

@@ -12,11 +12,12 @@ roadmap:
 make a functional scene render---->done
 camera movement---->done
 skybox ----> done
-starman ----> adjust texture placement ---->
+starman ----> adjust texture placement ----> done
 planets ----> add more polygonal sphere mesh ----> done
 lighting ----> done
-Shadow mapping ----> 
+Shadow mapping ---->DONE
 planet animation ---->
 
-sposta l'origine dal centro alla posizione di pyrona
-da provare: translare tutto della posizione di pyrona
+adjustments:
+-add buttons on  scenecanvas
+-make shadowmap and shading exclude each other
