@@ -9,25 +9,22 @@ var light_angles = [new vec3(0.0 ,90.0 ,0.0), new vec3(0.0, -90.0, 0.0),  new ve
 					new vec3(90.0 ,0.0 ,0.0), new vec3(0.0, 0.0, 0.0), new vec3(0.0, 180.0, 0.0) ];
 light_angles.forEach(vec =>{
 	vec.mult(deg2rad);
-})
+});
+var	light_position_V;
 var CV, LV, MVP1, MW_quaoar, MV_quaoar, MW_kamillis, MV_kamillis, MW_pyrona, MV_pyrona, MW_hagaton, MV_hagaton, MW_ophin, MV_ophin, MW_hal, MV_hal, MW_spaceman, MV_spaceman; // view matrices
 var LVs;
 var cube1, cube2, skybox, quaoar, kamillis, pyrona, hagaton, ophin, hal, spaceman;
 
+var quaoar_pos;
+var kamillis_pos;
+var pyrona_pos;
+var hagaton_pos;
+var ophin_pos;
+var hal_pos;
+var spaceman_pos;
+
 var axys = 4.75;
 
-var quaoar_pos = new vec3(-15,10, 40);
-var kamillis_pos = new vec3(-40,-25,-40);
-var pyrona_pos = new vec3(30.0,-axys,0.0);
-var hagaton_pos = new vec3(45,30,-35);
-var ophin_pos = new vec3(0,-axys,0);
-var hal_pos = new vec3(12,-axys, 3.25);
-
-var spaceman_pos = new vec3(0, 0, 0);
-
-
-light_position = new vec3(-pyrona_pos.x, -pyrona_pos.y, -pyrona_pos.z);
-light_position_V = [pyrona_pos.x, pyrona_pos.y, pyrona_pos.z];
 
 
 
@@ -41,12 +38,29 @@ function initWebGL()
 	    }
 }
 
+function initVariables()
+{
+	quaoar_pos = new vec3(-15,10, 40);
+	kamillis_pos = new vec3(-40,-25,-40);
+	pyrona_pos = new vec3(30.0,-axys,0.0);
+	hagaton_pos = new vec3(45,30,-35);
+	ophin_pos = new vec3(0,-axys,0);
+	hal_pos = new vec3(12,-axys, 3.25);
+	spaceman_pos = new vec3(0, 0, 0);
+
+
+	light_position = new vec3(-pyrona_pos.x, -pyrona_pos.y, -pyrona_pos.z);
+	light_position_V = [pyrona_pos.x, pyrona_pos.y, pyrona_pos.z];
+
+}
+
 function Init()
 {
 
 	// Initialize the WebGL canvas
 	canvas = document.getElementById("scene");
 	
+	initVariables();
 	initWebGL();
 	
 	// Initialize settings

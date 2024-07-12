@@ -4,7 +4,7 @@
             <title>Space walking</title>
             <script src="linear_algebra.js"></script>
             <script src="objects_drawer.js"></script>
-            <script src="init.js"></script>
+            <script src="main.js"></script>
             <script src="shadow_map.js"></script>
             <script src="controls.js"></script>
         </head>
@@ -12,15 +12,28 @@
         <body>
             <canvas id="scene"></canvas>
 
+            <div id="controls">
+                <input type="button" value="V" onclick="ShowControls()"/>
+            </div>
+    
             <style>
                 canvas 
                 {
-            	display: block;
-	            position: absolute;
-	            top:  0;
-	            left: 0;
-	            width:  50%;
-	            height: 100%;
+                display: block;
+                position: absolute;
+                top:  0;
+                left: 0;
+                width:  50%;
+                height: 100%;
+                }
+
+                #controls
+                {
+                background-color: rgba(0,0,0,0.5);
+                position: absolute;
+                right: 1em;
+                top: 1em;
+                width: 18em;
                 }
             </style>           
         </body>
