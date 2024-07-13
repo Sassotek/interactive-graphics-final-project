@@ -1,6 +1,7 @@
 var canvas, gl, ext;
 var cam_z = 20;
 var camera_position = new vec3(0,0,-cam_z);
+var fp_camera_position = new vec3(0,-1,0);
 var camera_angle = new vec3(20,-45,0);
 camera_angle.mult(deg2rad);
 
@@ -23,8 +24,9 @@ var ophin_pos;
 var hal_pos;
 var spaceman_pos;
 
-var axys = 4.75;
+var axys = 10;
 
+var first_person = 0;
 
 
 
@@ -42,16 +44,15 @@ function initVariables()
 {
 	quaoar_pos = new vec3(-15,10, 40);
 	kamillis_pos = new vec3(-40,-25,-40);
-	pyrona_pos = new vec3(30.0,-axys,0.0);
-	hagaton_pos = new vec3(45,30,-35);
+	pyrona_pos = new vec3(45.0,-axys,0.0);
+	hagaton_pos = new vec3(50,30,-35);
 	ophin_pos = new vec3(0,-axys,0);
-	hal_pos = new vec3(12,-axys, 3.25);
+	hal_pos = new vec3(30,-axys, 3.25);
 	spaceman_pos = new vec3(0, 0, 0);
 
 
 	light_position = new vec3(-pyrona_pos.x, -pyrona_pos.y, -pyrona_pos.z);
 	light_position_V = [pyrona_pos.x, pyrona_pos.y, pyrona_pos.z];
-
 }
 
 function Init()
@@ -59,6 +60,11 @@ function Init()
 
 	// Initialize the WebGL canvas
 	canvas = document.getElementById("scene");
+	checkbox_shadowmap = document.getElementById("shadowmap");
+	checkbox_shadowmap.checked = true;
+
+	checkbox_mix = document.getElementById("mix");
+	checkbox_mix.checked = true;
 	
 	initVariables();
 	initWebGL();
@@ -81,6 +87,7 @@ function Init()
 	hal = new planet_drawer();
 
 	objs = [quaoar, kamillis, hagaton, ophin, hal, spaceman];
+	toggle_shadowmap(1);
 
 	image_loader("http://0.0.0.0:8000/quaoar_texture.png", quaoar, 1);
 	image_loader("http://0.0.0.0:8000/kamillis_texture.png", kamillis, 2);
@@ -130,7 +137,15 @@ function ProjectionMatrix(cw = canvas.width, ch = canvas.height, fov_angle=90 )
 
 function UpdateViewMatrices()
 {
-	CV = trans(1, camera_angle, camera_position);
+	if(first_person == 0)
+		{
+			CV = trans(1, camera_angle, camera_position);
+		}
+	
+	else if(first_person == 1)
+		{
+			CV = trans_(1, camera_angle, fp_camera_position);
+		}
 	
 	var LV_positive_x = trans_(1.0, light_angles[0], light_position);
 	var LV_negative_x = trans_(1.0, light_angles[1], light_position);
@@ -140,14 +155,13 @@ function UpdateViewMatrices()
 	var LV_negative_z = trans_(1.0, light_angles[5], light_position);
 
 	LVs = [LV_positive_x, LV_negative_x, LV_positive_y, LV_negative_y, LV_positive_z, LV_negative_z];
-	//CV = LVs[5];
 }
 
 function UpdateTransformations()
 {
 	
 	var spaceman_rot = new vec3(0,90*deg2rad,0);
-	MW_spaceman = trans(0.2, spaceman_rot, spaceman_pos);
+	MW_spaceman = trans(0.5, spaceman_rot, spaceman_pos);
 	MV_spaceman = m_mult(CV, MW_spaceman);
 
 	MW_quaoar =  trans(2 ,new vec3(0,0,0), quaoar_pos);
@@ -156,13 +170,13 @@ function UpdateTransformations()
 	MW_kamillis = trans(2 ,new vec3(0,0,0), kamillis_pos);
 	MV_kamillis = m_mult(CV, MW_kamillis);
 
-	MW_pyrona = trans(5 ,new vec3(0,0,0), pyrona_pos);
+	MW_pyrona = trans(7 ,new vec3(0,0,0), pyrona_pos);
 	MV_pyrona = m_mult(CV, MW_pyrona);
 
 	MW_hagaton = trans(2.5 ,new vec3(0,0,0), hagaton_pos);
 	MV_hagaton = m_mult(CV, MW_hagaton);
 
-	MW_ophin = trans(5 ,new vec3(0,0,0), ophin_pos);
+	MW_ophin = trans(10 ,new vec3(0,0,0), ophin_pos);
 	MV_ophin = m_mult(CV, MW_ophin);
 
 	MW_hal = trans(5, new vec3(0,0,0), hal_pos);
@@ -224,7 +238,6 @@ function DrawTestCube()
 function ObjectsDraw()
 {
 	gl.enable(gl.DEPTH_TEST);
-	//gl.enable(gl.CULL_FACE);
 
 	gl.clearColor(0.0, 0.0, 0.05, 1);
 

@@ -21,3 +21,6 @@ planet animation ---->
 adjustments:
 -add buttons on  scenecanvas
 -make shadowmap and shading exclude each other
+
+//0.02
+//-0.002

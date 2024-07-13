@@ -373,6 +373,7 @@ class spaceman_drawer
         this.alpha = gl.getUniformLocation(this.prog, 'alpha');
         this.light_set = gl.getUniformLocation(this.prog, 'light_set');
         this.shadows_set = gl.getUniformLocation(this.prog, 'shadows_set');
+        this.mix_set = gl.getUniformLocation(this.prog, "mix_set");
 
         this.vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -420,7 +421,11 @@ class spaceman_drawer
         gl.uniform3f(this.light, vec.x, vec.y, vec.z);
         gl.uniform1f(this.alpha, a);
         gl.uniform1i(this.light_set, true);
-        gl.uniform1f(this.bias, -0.002);
+    }
+
+    set_shadowmap_bias(b)
+    {
+        gl.uniform1f(this.bias, b);
     }
 
     draw(m_p, m_w, n_w)
@@ -428,12 +433,12 @@ class spaceman_drawer
         gl.useProgram(this.prog);
         this.num_triangles = this.vertices.length / 3;
 
+        gl.uniform1i(this.shadows_set, this.use_shadows);
         if(this.use_shadows)
             {
                 gl.uniform1i(this.depth_sampler, 0);
                 gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(gl.TEXTURE_CUBE_MAP, shadow_texture);
-                gl.uniform1i(this.shadows_set, 1);
             }
         
         gl.uniformMatrix4fv(this.mvp, false, m_p);
@@ -496,6 +501,7 @@ class planet_drawer
         this.alpha = gl.getUniformLocation(this.prog, 'alpha');
         this.light_set = gl.getUniformLocation(this.prog, 'light_set');
         this.shadows_set = gl.getUniformLocation(this.prog, 'shadows_set');
+        this.mix_set = gl.getUniformLocation(this.prog, "mix_set");
 
         this.vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -543,21 +549,24 @@ class planet_drawer
         gl.uniform3f(this.light, vec.x, vec.y, vec.z);
         gl.uniform1f(this.alpha, a);
         gl.uniform1i(this.light_set, true);
-        gl.uniform1f(this.bias, -0.002);
     }
 
+    set_shadowmap_bias(b)
+    {
+        gl.uniform1f(this.bias, b);
+    }
 
     draw(m_p, m_w, n_w)
     {    
         gl.useProgram(this.prog);
         this.num_triangles = this.vertices.length / 3;
 
+        gl.uniform1i(this.shadows_set, this.use_shadows);
         if(this.use_shadows)
             {
                 gl.uniform1i(this.depth_sampler, 0);
                 gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(gl.TEXTURE_CUBE_MAP, shadow_texture);
-                gl.uniform1i(this.shadows_set, 1);
             }
     
         gl.uniformMatrix4fv(this.mvp, false, m_p);
@@ -799,6 +808,7 @@ var mainFragmentShaderText = `
     uniform float bias;
 
     uniform bool shadows_set;
+    uniform bool mix_set;
 
     varying vec2 v_tex_coord;
     varying vec3 frag_normals;
@@ -818,9 +828,9 @@ var mainFragmentShaderText = `
 
         float shadowmap_value;
         float lightFragDist;
-        
-        
 
+        vec3 color;
+        
         if(light_set)
         {
             vec3 omega = normalize(light);
@@ -833,9 +843,8 @@ var mainFragmentShaderText = `
             K_specular = pow(specular, alpha);
 
             if(shadows_set)
-            {
-                
-                intensity = 0.2;
+            {    
+                intensity = 0.05;
                 vec3 ToLight = normalize(frag_positions - LightP);
                 ToLight = vec3(b*vec4(ToLight, 1.0));
                 shadowmap_value = textureCube(depth_sampler, ToLight).z;
@@ -843,52 +852,44 @@ var mainFragmentShaderText = `
                 vec3 LightToFrag = (frag_positions - LightP);
 
                 lightFragDist = (length(LightToFrag) - 0.1)/(100.0 - 0.1);
-                
-                //color = lightFragDist;
-
-                
+                    
                 vec3 l = normalize(-LightToFrag);
-                float cosTheta = dot(n,l);
-                float i = 0.0;
-
-                if((cosTheta>=0.9) && (cosTheta<=1.0))
-                {
-                    i = 0.01;
-                }
                 
-                if((shadowmap_value+bias+i)>= lightFragDist)
+                if((shadowmap_value+bias)>= lightFragDist)
                 {
-                    intensity += 0.8;
+                    intensity += 0.95;
                 }
             }
         }
         
         if(texture_set)
         {
-            if(shadows_set)
-            {
-                vec4 tex_color = texture2D(sampler, v_tex_coord);
-                vec3 color = intensity*(tex_color.rgb); 
-                gl_FragColor = vec4(color, 1.0);
-                //gl_FragColor = vec4(vec3(lightFragDist), 1.0);
-            }
-            else if(light_set)
+            color = texture2D(sampler, v_tex_coord).rgb;
+            if(light_set)
             {   
                 //gl_FragColor = vec4(vec3(color), 1.0);
                 vec4 tex_color = texture2D(sampler, v_tex_coord);
-                vec3 color = intensity*(K_diffuse*tex_color.rgb + K_specular*vec3(1.0, 1.0, 1.0)); 
-                gl_FragColor = vec4(color, 1.0);
-            }
-            else
-            {
-                gl_FragColor = texture2D(sampler, v_tex_coord);
+                color = intensity*(K_diffuse*tex_color.rgb + K_specular*vec3(1.0, 1.0, 1.0)); 
+                if(shadows_set)
+                {
+                    vec4 tex_color = texture2D(sampler, v_tex_coord);
+                    color = intensity*(tex_color.rgb);
+                    
+                    if(mix_set)
+                    {
+                        float i = 1.0;
+                        if(intensity < 1.0) i = 0.0;
+                        color = intensity*(K_diffuse*tex_color.rgb + i*K_specular*vec3(1.0, 1.0, 1.0));
+                    }
+                }
             }
         }
 
         else
         {
-            gl_FragColor = vec4(frag_normals, 1.0);
-            //gl_FragColor = intensity*(lamb*vec4(1,0.1,0.5,1)+pow(specular, alpha)*vec4(1,1,1,1));
+            color = vec3(frag_normals);
         }
+
+        gl_FragColor = vec4(color, 1.0);
     }
 `;

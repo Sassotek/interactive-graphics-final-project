@@ -12,8 +12,16 @@
         <body>
             <canvas id="scene"></canvas>
 
-            <div id="controls">
-                <input type="button" value="V" onclick="ShowControls()"/>
+            <div id="controls_menu">
+                <input type="button" value="v" style="background-color: rgb(193, 86, 182);", onclick="ShowControls()"/>
+                <div id="controls_group">
+                    <div class="control"><input type="button" id="first_person" style="width:100%; background-color: rgb(193, 86, 182);" value="Toggle first person" onclick="toggle_fp()"/></div>
+                    <div class="control"><input type="button" id="reset_values" style="width:100%; background-color: rgb(193, 86, 182);" value="Reset" onclick="use_reset()"/></div>
+                    <div class="control"><input type="button" id="planet_animation_x" style="width:100%; background-color: rgb(193, 86, 182);" value="Orizzontal rotation" onclick="DrawScene()"/></div>
+                    <div class="control"><input type="button" id="planet_animation_y" style="width:100%; background-color: rgb(193, 86, 182);" value="Vertical rotation" onclick="DrawScene()"/></div>
+                    <div class="control"><input type="checkbox" id="shadowmap" value="on" onchange="use_shadowmap()"/><label style = "background-color: rgb(193, 86, 182); padding-right: 1%;"> shadowmap</label></div>
+                    <div class="control"><input type="checkbox" id="mix" value="on" onchange="use_mix()"/><label style = "background-color: rgb(193, 86, 182); padding-right: 1%;"> shadowmap + shading</label></div>
+                </div> 
             </div>
     
             <style>
@@ -27,13 +35,24 @@
                 height: 100%;
                 }
 
-                #controls
+                #controls_menu
                 {
-                background-color: rgba(0,0,0,0.5);
                 position: absolute;
                 right: 1em;
                 top: 1em;
                 width: 18em;
+                }
+                
+                #controls_group
+                {
+                background-color: rgba(80, 83, 126, 0.3);
+                }
+
+                .control
+                {
+                width: 75%;
+                height: 100%;
+                padding: 2%;
                 }
             </style>           
         </body>

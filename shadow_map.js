@@ -96,7 +96,8 @@ function ShadowMapInit()
 
     objs.forEach(object => {
         gl.useProgram(object.prog);
-        object.use_shadows = 1;
+        object.set_shadowmap_bias(0.02);
+        gl.uniform1i(object.mix_set, true);
     });
 
     console.log("shadowmap_init");
@@ -167,6 +168,25 @@ function ShadowMapDraw() //draw shadowed objects
 
 }
 
+function toggle_shadowmap(x)
+{
+    objs.forEach(object => {
+        gl.useProgram(object.prog);
+        object.use_shadows = x;
+        //gl.uniform1f(object.bias, -0.002);
+    });
+}
+
+function toggle_mix(x)
+{
+    objs.forEach(object => {
+        gl.useProgram(object.prog);
+        gl.uniform1i(object.mix_set, x);
+
+        if(x) object.set_shadowmap_bias(0.02);
+        else if(!x) object.set_shadowmap_bias(-0.002);
+    });
+}
 
 class shadowmap_debugger
 {
