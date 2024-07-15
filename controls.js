@@ -114,6 +114,22 @@ function use_mix()
     DrawScene();
 }
 
+function orizzontal_rotation()
+{
+    pyrona_rot2.z = 0;
+    hal_rot2.z = 0;
+    animation_orizzontal = 1;
+    animation_vertical = 0;
+}
+
+function vertical_rotation()
+{
+    pyrona_rot2.y = 0;
+    hal_rot2.y = 0;
+    animation_orizzontal = 0;
+    animation_vertical = 1;
+}
+
 document.addEventListener("DOMContentLoaded", function() 
 {
     Init();
