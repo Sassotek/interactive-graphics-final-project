@@ -13,7 +13,8 @@ canvas_zoom = function( s )
 
 	UpdateViewMatrices();
     UpdateTransformations();
-	DrawScene();
+	//DrawScene();
+    requestAnimationFrame(animate);
 }
 
 function eventHandler(event)
@@ -45,7 +46,8 @@ function eventHandler(event)
                     cy = event.clientY;
                     UpdateViewMatrices();
                     UpdateTransformations();
-                    DrawScene();
+                    //DrawScene();
+                    requestAnimationFrame(animate);
                 }
             break;
     }
@@ -55,7 +57,8 @@ function WindowResize()
 {
 	UpdateCanvasSize();
     UpdateTransformations();
-	DrawScene();
+	//DrawScene();
+    requestAnimationFrame(animate);
 }
 
 
@@ -72,7 +75,8 @@ function toggle_fp()
     
     UpdateViewMatrices();
     UpdateTransformations();
-	DrawScene();
+	//DrawScene();
+    requestAnimationFrame(animate);
 }
 
 function use_reset()
@@ -80,7 +84,8 @@ function use_reset()
     initVariables();
     UpdateViewMatrices();
     UpdateTransformations();
-	DrawScene();
+	//DrawScene();
+    requestAnimationFrame(animate);
 }
 
 function use_shadowmap()
@@ -111,23 +116,36 @@ function use_mix()
             toggle_mix(false);
         }
     
-    DrawScene();
+    //DrawScene();
+    requestAnimationFrame(animate);
 }
 
 function orizzontal_rotation()
 {
     pyrona_rot2.z = 0;
     hal_rot2.z = 0;
-    animation_orizzontal = 1;
+    if(animation_orizzontal) animation_orizzontal = 0;
+    else if(!animation_orizzontal) animation_orizzontal = 1;
+    console.log(animation_orizzontal);
     animation_vertical = 0;
+    requestAnimationFrame(animate);
 }
 
 function vertical_rotation()
 {
     pyrona_rot2.y = 0;
     hal_rot2.y = 0;
+    if(animation_vertical) animation_vertical = 0;
+    else if(!animation_vertical) animation_vertical = 1;
+    console.log(animation_vertical);
     animation_orizzontal = 0;
-    animation_vertical = 1;
+    requestAnimationFrame(animate);
+}
+
+function set_velocity(value)
+{
+    velocity = value;
+    slider_value.textContent = velocity;
 }
 
 document.addEventListener("DOMContentLoaded", function() 
