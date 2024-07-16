@@ -9,12 +9,12 @@ var viewRotZ;
 canvas_zoom = function( s ) 
 {
 	camera_position.z *= s/canvas.height + 1;
-    //if(camera_position.z < -10) camera_position.z = -10;
+    if(camera_position.z < -20) camera_position.z = -20;
 
 	UpdateViewMatrices();
     UpdateTransformations();
-	//DrawScene();
-    requestAnimationFrame(animate);
+	DrawScene();
+    //requestAnimationFrame(animate);
 }
 
 function eventHandler(event)
@@ -46,8 +46,8 @@ function eventHandler(event)
                     cy = event.clientY;
                     UpdateViewMatrices();
                     UpdateTransformations();
-                    //DrawScene();
-                    requestAnimationFrame(animate);
+                    DrawScene();
+                    //requestAnimationFrame(animate);
                 }
             break;
     }
@@ -57,8 +57,8 @@ function WindowResize()
 {
 	UpdateCanvasSize();
     UpdateTransformations();
-	//DrawScene();
-    requestAnimationFrame(animate);
+	DrawScene();
+    //requestAnimationFrame(animate);
 }
 
 
@@ -75,8 +75,8 @@ function toggle_fp()
     
     UpdateViewMatrices();
     UpdateTransformations();
-	//DrawScene();
-    requestAnimationFrame(animate);
+	DrawScene();
+    //requestAnimationFrame(animate);
 }
 
 function use_reset()
@@ -84,8 +84,8 @@ function use_reset()
     initVariables();
     UpdateViewMatrices();
     UpdateTransformations();
-	//DrawScene();
-    requestAnimationFrame(animate);
+	DrawScene();
+    //requestAnimationFrame(animate);
 }
 
 function use_shadowmap()
@@ -116,8 +116,8 @@ function use_mix()
             toggle_mix(false);
         }
     
-    //DrawScene();
-    requestAnimationFrame(animate);
+    DrawScene();
+    //requestAnimationFrame(animate);
 }
 
 function orizzontal_rotation()
@@ -126,7 +126,6 @@ function orizzontal_rotation()
     hal_rot2.z = 0;
     if(animation_orizzontal) animation_orizzontal = 0;
     else if(!animation_orizzontal) animation_orizzontal = 1;
-    console.log(animation_orizzontal);
     animation_vertical = 0;
     requestAnimationFrame(animate);
 }
@@ -137,7 +136,6 @@ function vertical_rotation()
     hal_rot2.y = 0;
     if(animation_vertical) animation_vertical = 0;
     else if(!animation_vertical) animation_vertical = 1;
-    console.log(animation_vertical);
     animation_orizzontal = 0;
     requestAnimationFrame(animate);
 }

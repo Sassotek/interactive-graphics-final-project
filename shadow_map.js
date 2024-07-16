@@ -179,13 +179,24 @@ function toggle_shadowmap(x)
 
 function toggle_mix(x)
 {
-    objs.forEach(object => {
-        gl.useProgram(object.prog);
-        gl.uniform1i(object.mix_set, x);
+    for(var i = 0; i< objs.length; i++)
+    {
+        gl.useProgram(objs[i].prog);
+        gl.uniform1i(objs[i].mix_set, x);
 
-        if(x) object.set_shadowmap_bias(0.02);
-        else if(!x) object.set_shadowmap_bias(-0.002);
-    });
+        if(x)
+            {
+                if(i == 5)
+                { 
+                    objs[i].set_shadowmap_bias(-0.0002);
+                }
+                else
+                {
+                    objs[i].set_shadowmap_bias(0.02);
+                }
+            }
+        else if(!x) objs[i].set_shadowmap_bias(-0.002);
+    }
 }
 
 class shadowmap_debugger
