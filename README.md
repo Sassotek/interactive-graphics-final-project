@@ -6,13 +6,14 @@ The camera is placed always locking at the astronaut and can be:
 + rotated around X-axys and Z-axis clicking with the left mouse button and dragging,
 + moved closer and farther with the mouse wheel.
  
-The scene is made using webgl and javascript, and are realized the visual effets: omni directional shading, omni directional shadowmapping. The final result is obtained combining both techniques.
+The scene is made using webgl and javascript, and are realized the visual effets: omni directional shading, using Phong light model, and omni directional shadowmapping.
 Initially all the planets are standing still, waiting for the command to move.
 6 planets can be find in the scene, of which
 + Standstill: _Quaoar_, _Kamillis_, _Hagaton_ and _Ophin_, the central planet.
 + Moving: _Pyrona_ the light source of the planetary system, it revolves around Ophin, and _Hal_, a smaller planet that revolves around Pyrona.
-All the moving planets rotates also on their axis.  
 
+All the moving planets rotate also on their axis.
+The final result is obtained combining both techniques. In particular the shadowmap bias is modified in order to make all objects,exception for the planet Ophin, project a shadow on other object but not on themselves leaving all the shading of themselves to the Phong light model. The exception with Ophin is made in order to have a correct cast of the astronaut shadow. 
 ## How to run it
 In order to run this app:
 1. Run ```server.py``` in ```./objects``` so that the main program can take objects and textures resources. (Check if your browser accepts http request having ```server.py``` opening a server reachible only by http requests)
@@ -26,5 +27,5 @@ In the application on the upper right side there is placed a commands table cont
 + ```Reset``` puts the planetary system on the initial disposition.
 + ```Orizzontal rotation``` makes Hal moving around Pyrona and Pyrona around Hal, orizzontally. 
 + ```Vertical rotation``` makes Hal moving around Pyrona and Pyrona around Hal, vertically. 
-+ ```Shadowmap```
-+ ```Shadowmap + Shading```
++ ```Shadowmap``` enable/disable shadowmap functions.
++ ```Shadowmap + Shading``` enable mixed technique, in order for this to work also "Shadowmap" checkbox must be enabled.
