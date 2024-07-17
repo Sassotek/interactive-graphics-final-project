@@ -94,11 +94,25 @@ function ShadowMapInit()
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
 
-    objs.forEach(object => {
-        gl.useProgram(object.prog);
-        object.set_shadowmap_bias(0.02);
-        gl.uniform1i(object.mix_set, true);
-    });
+
+    for(var i = 0; i< objs.length; i++)
+        {
+            gl.useProgram(objs[i].prog);
+            gl.uniform1i(objs[i].mix_set, true);
+    
+            if(i == 5)
+                {
+                    objs[i].set_shadowmap_bias(-0.0002);
+                }
+            else if( i == 3)
+                { 
+                    objs[i].set_shadowmap_bias(-0.002);
+                }
+            else
+                {
+                    objs[i].set_shadowmap_bias(0.02);
+                }
+        }
 
     console.log("shadowmap_init");
 }
@@ -186,16 +200,21 @@ function toggle_mix(x)
 
         if(x)
             {
-                if(i == 5)
-                { 
-                    objs[i].set_shadowmap_bias(-0.0002);
-                }
+                if(i == 5) 
+                    { 
+                        objs[i].set_shadowmap_bias(-0.0002);
+                    }
+                else if(i == 3)
+                    {
+                        objs[i].set_shadowmap_bias(-0.002);
+                    }
                 else
-                {
-                    objs[i].set_shadowmap_bias(0.02);
-                }
+                    {
+                        objs[i].set_shadowmap_bias(0.02);
+                    }
             }
         else if(!x) objs[i].set_shadowmap_bias(-0.002);
+        
     }
 }
 

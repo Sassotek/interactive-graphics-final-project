@@ -122,6 +122,13 @@ function use_mix()
 
 function orizzontal_rotation()
 {
+    if(!animation_vertical && !animation_orizzontal)
+        {
+            requestAnimationFrame(function set_time(now){
+                now*= 0.001;
+                then = now;
+            });
+        }
     pyrona_rot2.z = 0;
     hal_rot2.z = 0;
     if(animation_orizzontal) animation_orizzontal = 0;
@@ -132,6 +139,13 @@ function orizzontal_rotation()
 
 function vertical_rotation()
 {
+    if(!animation_vertical && !animation_orizzontal)
+        {
+            requestAnimationFrame(function set_time(now){
+                now*= 0.001;
+                then = now;
+            });
+        }
     pyrona_rot2.y = 0;
     hal_rot2.y = 0;
     if(animation_vertical) animation_vertical = 0;

@@ -315,8 +315,10 @@ function animate(now)
 			var angle = velocity*dt*deg2rad;
 			var pyrona_rotation_matrix = normal_transformation_matrix(trans(1, new vec3(0, angle,0), new vec3(0, 0, 0)));
 			pyrona_pos.m_prod(pyrona_rotation_matrix);
+			pyrona_rot1.y -= angle;
 			var hal_rotation_matrix = normal_transformation_matrix(trans(1, new vec3(0, -angle,0), new vec3(0, 0, 0)));
 			hal_pos.m_prod(hal_rotation_matrix);
+			hal_rot1.y += -angle;
 			//console.log("orizzontal");
 			UpdateViewMatrices();
     		UpdateWorld();
