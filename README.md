@@ -16,11 +16,7 @@ starman ----> adjust texture placement ----> done
 planets ----> add more polygonal sphere mesh ----> done
 lighting ----> done
 Shadow mapping ---->DONE
-planet animation ---->
-
-adjustments:
--add buttons on  scenecanvas
--make shadowmap and shading exclude each other
+planet animation ----> done
 
 //0.02
 //-0.002
