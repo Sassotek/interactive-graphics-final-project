@@ -1,12 +1,12 @@
 # interactive-graphics-final-project
 
 ## Space Walking
-This app realizes a scene where an astronaut placed on a planet which constitutes the center of a fictional planet system, where are included moving planets and standstill planets.
-The camera is placed always locking at the astronaut and can be:
+This app realizes a scene where an astronaut standing on a planet which constitutes the center of a fictional planet system, where are included moving planets and standstill planets.
+The camera is set up to constantly look at the astronaut and it can be:
 + rotated around X-axys and Z-axis clicking with the left mouse button and dragging,
 + moved closer and farther with the mouse wheel.
  
-The scene is made using webgl and javascript, and are realized the visual effets: omni directional shading, using Phong light model, and omni directional shadowmapping.
+The scene is made using webgl and javascript, and are realized the visual effets: omnidirectional shading, using Phong light model, and omnidirectional shadowmapping.
 Initially all the planets are standing still, waiting for the command to move.
 6 planets can be find in the scene, of which
 + Standstill: _Quaoar_, _Kamillis_, _Hagaton_ and _Ophin_, the central planet.
@@ -29,3 +29,4 @@ In the application on the upper right side there is placed a commands table cont
 + ```Vertical rotation``` makes Hal moving around Pyrona and Pyrona around Hal, vertically. 
 + ```Shadowmap``` enable/disable shadowmap functions.
 + ```Shadowmap + Shading``` enable mixed technique, in order for this to work also "Shadowmap" checkbox must be enabled.
++ Velocity slider, mapping values in the interval [-100 , +100] determines the rotation speed for both vertical and orizzontal movement, the sign determines the direction of the translation (counterclockwise/clockwise). 
